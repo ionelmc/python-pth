@@ -35,6 +35,5 @@ setup(
         'Programming Language :: Python :: Implementation :: PyPy',
     ],
     install_requires=[
-        'six'
     ]
 )
