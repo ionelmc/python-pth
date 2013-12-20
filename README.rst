@@ -10,7 +10,7 @@
     :alt: Coverage Status
     :target: https://coveralls.io/r/ionelmc/python-pth
 
-.. image:: https://badge.fury.io/py/pip.png
+.. image:: https://badge.fury.io/py/pth.png
     :alt: PYPI Package
     :target: https://pypi.python.org/pypi/pth
 
