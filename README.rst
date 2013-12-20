@@ -2,6 +2,22 @@
         python-pth
 ==========================
 
+.. image:: https://secure.travis-ci.org/ionelmc/python-pth.png?branch=master
+    :alt: Build Status
+    :target: http://travis-ci.org/ionelmc/python-pth
+
+.. image:: https://coveralls.io/repos/ionelmc/python-pth/badge.png?branch=master
+    :alt: Coverage Status
+    :target: https://coveralls.io/r/ionelmc/python-pth
+
+.. image:: https://pypip.in/d/pth/badge.png
+    :alt: PYPI Package
+    :target: https://pypi.python.org/pypi/pth
+
+.. image:: https://pypip.in/v/pth/badge.png
+    :alt: PYPI Package
+    :target: https://pypi.python.org/pypi/pth
+
 Simple and brief path traversal and filesystem access library. This library is a bit different that other path manipulation libraries:
 
 * Path are subclasses of strings. You can use them anyhere you would use a string.
