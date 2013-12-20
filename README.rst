@@ -85,7 +85,6 @@ Properties::
 Looping over children, including files in .zip files::
 
     >>> for i in p: print(i)
-    tests/test_pth.pyc
     tests/a
     tests/a/a.txt
     tests/test_pth.py
@@ -514,4 +513,3 @@ Working with files in a .zip::
 
     >>> pth.ZipPath.from_string('tests/bogus')
     <Path 'tests/bogus'>
-
