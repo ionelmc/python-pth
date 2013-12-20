@@ -12,11 +12,14 @@ Simple and brief path traversal and filesystem access library. This library is a
   * ``getatime`` becomes a property named ``atime``
   * ``getctime`` becomes a property named ``ctime``
   * ``getmtime`` becomes a property named ``mtime``
+  * ``split`` becomes a method name ``splitpath`` as ``split`` is already a string method
+  * ``join`` becomes a method name ``joinpath`` as ``join`` is already a string method
+  * ``commonprefix`` is not implemented
 
 * Iterating through a *Path* object yields *Path* instances for all the children in the tree. This is equivalent to ``os.walk`` but without
   having to do all that manual wrapping (it's so annoying !).
 * Calling a *Path* object calls ``open()`` on the path. Takes any argument ``open`` would take (except the filename ofcourse).
-
+* Transparent support for files in .zip files.
 
 Usage
 -----
@@ -44,8 +47,12 @@ Doctests
     >>> p
     <Path 'tests'>
 
+Joining paths::
+
     >>> p/"a"/"b"/"c"/"d"
     <Path 'tests/a/b/c/d'>
+
+Properties::
 
     >>> p.abspath
     <Path '/.../tests'>
@@ -61,9 +68,11 @@ Doctests
     True
 
     >>> p2()
-    <open file 'tests/b.txt', mode 'r' at ...>
+    <...'tests/b.txt'...mode...'r'...>
 
-    >>> for i in p: print i
+Looping over children, including files in .zip files::
+
+    >>> for i in p: print(i)
     tests/test_pth.pyc
     tests/a
     tests/a/a.txt
@@ -75,13 +84,19 @@ Doctests
     tests/test.zip/a.txt
     tests/b.txt
 
+Trying to access inexisting property::
+
     >>> p.bogus
     Traceback (most recent call last):
     ...
     AttributeError: 'Path' object has no attribute 'bogus'
 
+Automatic wrapping of zips::
+
     >>> p/'test.zip'
     <ZipPath 'tests/test.zip' / ''>
+
+Other properties::
 
     >>> p.abspath
     <Path '/.../tests'>
@@ -116,23 +131,14 @@ Doctests
     >>> p.expandvars
     <Path 'tests'>
 
-    >>> type(p.getatime)
-    <type 'float'>
-
     >>> type(p.atime)
-    <type 'float'>
-
-    >>> type(p.getctime)
-    <type 'float'>
+    <... 'float'>
 
     >>> type(p.ctime)
-    <type 'float'>
-
-    >>> type(p.getsize)
-    <type 'int'>
+    <... 'float'>
 
     >>> type(p.size)
-    <type 'int'>
+    <... 'int'>
 
     >>> p.isabs
     False
@@ -172,6 +178,24 @@ Doctests
 
     >>> p.drive
     ''
+
+    >>> [i for i in p/'xxx']
+    Traceback (most recent call last):
+    ...
+    pth.PathMustBeDirectory: <Path 'tests/xxx'> is not a directory nor a zip !
+
+    >>> (p/'xxx').isfile
+    False
+
+    >>> (p/'xxx')()
+    Traceback (most recent call last):
+    ...
+    pth.PathMustBeFile: ... 2...
+
+    >>> p()
+    Traceback (most recent call last):
+    ...
+    pth.PathMustBeFile: <Path 'tests'> is not a file !
 
     >>> pth('a.txt').splitext
     (<Path 'a'>, '.txt')
@@ -227,25 +251,16 @@ Zip stuff::
     >>> z.expandvars
     <ZipPath 'tests/test.zip' / ''>
 
-    >>> type(z.getatime)
-    <type 'float'>
-
     >>> type(z.atime)
     Traceback (most recent call last):
     ...
     AttributeError: Not available here.
 
-    >>> type(z.getctime)
-    <type 'float'>
-
     >>> type(z.ctime)
-    <type 'float'>
-
-    >>> type(z.getsize)
-    <type 'int'>
+    <... 'float'>
 
     >>> type(z.size)
-    <type 'int'>
+    <... 'int'>
 
     >>> z.isabs
     False
@@ -270,11 +285,11 @@ Zip stuff::
     ...
     AttributeError: Not available here.
 
-    >>> for i in z: print i, repr(i)
-    tests/test.zip/1...... <ZipPath 'tests/test.zip' / '1/'>
-    tests/test.zip/1/1.txt <ZipPath 'tests/test.zip' / '1/1.txt'>
-    tests/test.zip/B.TXT...<ZipPath 'tests/test.zip' / 'B.TXT'>
-    tests/test.zip/a.txt...<ZipPath 'tests/test.zip' / 'a.txt'>
+    >>> for i in z: print((str(i), repr(i)))
+    ('tests/test.zip/1',...... "<ZipPath 'tests/test.zip' / '1/'>")
+    ('tests/test.zip/1/1.txt', "<ZipPath 'tests/test.zip' / '1/1.txt'>")
+    ('tests/test.zip/B.TXT',..."<ZipPath 'tests/test.zip' / 'B.TXT'>")
+    ('tests/test.zip/a.txt',..."<ZipPath 'tests/test.zip' / 'a.txt'>")
 
     >>> (z/'B.TXT')
     <ZipPath 'tests/test.zip' / 'B.TXT'>
@@ -287,6 +302,9 @@ Zip stuff::
 
     >>> (z/'B.TXT').normpath
     <ZipPath 'tests/test.zip' / 'B.TXT'>
+
+    >>> (z/'B.TXT').name
+    <Path 'B.TXT'>
 
     >>> (z/'B.TXT').name
     <Path 'B.TXT'>
@@ -314,3 +332,174 @@ Zip stuff::
 
     >>> pth('a.txt').ext
     '.txt'
+
+Working with files in a .zip::
+
+    >>> p = z/'B.TXT'
+    >>> p.abspath
+    <ZipPath '/.../tests/test.zip' / 'B.TXT'>
+
+    >>> p.abs
+    <ZipPath '/.../tests/test.zip' / 'B.TXT'>
+
+    >>> p.basename
+    <Path 'B.TXT'>
+
+    >>> p.abs.basename
+    <Path 'B.TXT'>
+
+    >>> p.name
+    <Path 'B.TXT'>
+
+    >>> p.dirname
+    <ZipPath 'tests/test.zip' / ''>
+
+    >>> p.dir
+    <ZipPath 'tests/test.zip' / ''>
+
+    >>> p.exists
+    True
+
+    >>> type(p.atime)
+    Traceback (most recent call last):
+    ...
+    AttributeError: Not available here.
+
+    >>> type(p.ctime)
+    <... 'float'>
+
+    >>> type(p.size)
+    <... 'int'>
+
+    >>> p.isabs
+    False
+
+    >>> p.abs.isabs
+    True
+
+    >>> p.isdir
+    False
+
+    >>> p.isfile
+    True
+
+    >>> p.islink
+    False
+
+    >>> p.ismount
+    False
+
+    >>> p.lexists
+    Traceback (most recent call last):
+    ...
+    AttributeError: Not available here.
+
+    >>> p.normcase
+    <ZipPath 'tests/test.zip' / 'B.TXT'>
+
+    >>> p.normpath
+    <ZipPath 'tests/test.zip' / 'B.TXT'>
+
+    >>> p.realpath
+    <ZipPath '/.../tests/test.zip' / 'B.TXT'>
+
+    >>> p.splitpath
+    (<ZipPath 'tests/test.zip' / ''>, <Path 'B.TXT'>)
+
+    >>> pth.ZipPath.from_string('tests/test.zip/1/1.txt')
+    <ZipPath 'tests/test.zip' / '1/1.txt'>
+
+    >>> p.splitdrive
+    ('', <ZipPath 'tests/test.zip' / 'B.TXT'>)
+
+    >>> p.drive
+    ''
+
+    >>> p.splitext
+    (<ZipPath 'tests/test.zip' / 'B'>, '.TXT')
+
+    >>> p.ext
+    '.TXT'
+
+    >>> p.joinpath('tete')
+    <ZipPath 'tests/test.zip' / 'B.TXT/tete'>
+
+    >>> p.joinpath('tete').exists
+    False
+
+    >>> p.joinpath('tete').isdir
+    False
+
+    >>> p.joinpath('tete').isfile
+    False
+
+    >>> p.joinpath('tete').ctime
+    Traceback (most recent call last):
+    ...
+    pth.PathDoesNotExist: "There is no item named 'B.TXT/tete' in the archive"
+
+    >>> p.joinpath('tete').size
+    Traceback (most recent call last):
+    ...
+    pth.PathDoesNotExist: "There is no item named 'B.TXT/tete' in the archive"
+
+    >>> p.relpath('tests')
+    Traceback (most recent call last):
+    ...
+    AttributeError: Not available here.
+
+    >>> p.joinpath('tete')('rb')
+    Traceback (most recent call last):
+    ...
+    pth.PathMustBeFile: <ZipPath 'tests/test.zip' / 'B.TXT/tete'> is not a file !
+
+    >>> p('r')
+    <zipfile.ZipExtFile ...>
+
+    >>> [i for i in p]
+    Traceback (most recent call last):
+    ...
+    pth.PathMustBeDirectory: <ZipPath 'tests/test.zip' / 'B.TXT'> is not a directory !
+
+    >>> z('rb')
+    Traceback (most recent call last):
+    ...
+    pth.PathMustBeFile: <ZipPath 'tests/test.zip' / ''> is not a file !
+
+    >>> [i for i in z]
+    [<ZipPath 'tests/test.zip' / '1/'>, <ZipPath 'tests/test.zip' / '1/1.txt'>, <ZipPath 'tests/test.zip' / 'B.TXT'>, <ZipPath 'tests/test.zip' / 'a.txt'>]
+
+    >>> pth.ZipPath('tests', '', '')
+    <Path 'tests'>
+
+    >>> t = pth.TempPath()
+    >>> t
+    <TempPath '/tmp/...'>
+
+    >>> with t:
+    ...     with (t/"booo.txt")('w+') as f:
+    ...         _ = f.write("test")
+    ...     print([i for i in t])
+    [<Path '/tmp/.../booo.txt'>]
+
+    >>> t.exists
+    False
+
+    >>> pth.ZipPath.from_string('/bogus/path/to/stuff/bla/bla/bla')
+    <Path '/bogus/path/to/stuff/bla/bla/bla'>
+
+    >>> pth.ZipPath.from_string('bogus')
+    <Path 'bogus'>
+
+    >>> pth.ZipPath.from_string('tests/test.zip/bogus/path/to/stuff/bla/bla/bla')
+    <ZipPath 'tests/test.zip' / 'bogus/path/to/stuff/bla/bla/bla'>
+
+    >>> pth.ZipPath.from_string('tests/1/bogus/path/to/stuff/bla/bla/bla')
+    <Path 'tests/1/bogus/path/to/stuff/bla/bla/bla'>
+
+    >>> pth.ZipPath.from_string('tests')
+    <Path 'tests'>
+
+    >>> pth.ZipPath.from_string('tests/bogus')
+    <Path 'tests/bogus'>
+
