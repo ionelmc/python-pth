@@ -9,3 +9,4 @@ build/
 pip-log.txt
 .tox/
 .coverage
+.ve/
