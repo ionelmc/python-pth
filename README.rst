@@ -27,11 +27,17 @@ Simple and brief path traversal and filesystem access library. This library is a
   * ``split`` becomes a method name ``splitpath`` as ``split`` is already a string method
   * ``join`` becomes a method name ``joinpath`` as ``join`` is already a string method
   * ``commonprefix`` is not implemented
+  * ``basename`` is aliased to ``name``
+  * ``dirname`` is aliased to ``dir``
 
 * Iterating through a *Path* object yields *Path* instances for all the children in the tree. This is equivalent to ``os.walk`` but without
   having to do all that manual wrapping (it's so annoying !).
 * Calling a *Path* object calls ``open()`` on the path. Takes any argument ``open`` would take (except the filename ofcourse).
 * Transparent support for files in .zip files.
+
+Basically it is designed for extreme brevity. It has some disadvantages because of this:
+* Path objects don't work exactly like strings - it's iterator returns child paths not characters.
+* ???
 
 Usage
 -----
