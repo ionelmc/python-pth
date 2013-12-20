@@ -5,11 +5,11 @@ import os
 
 setup(
     name = "pth",
-    version = "0.5.2",
+    version = "0.0.1",
     url = 'https://github.com/ionelmc/python-pth',
     download_url = '',
     license = 'BSD',
-    description = "Inpection pth for python applications. Connection is done via unix domain sockets.",
+    description = "Simple and brief path traversal and filesystem access library.",
     long_description = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read(),
     author = 'Ionel Cristian Mărieș',
     author_email = 'contact@ionelmc.ro',
