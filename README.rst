@@ -14,6 +14,8 @@
     :alt: PYPI Package
     :target: https://pypi.python.org/pypi/pth
 
+**Note:** This is in very alpha state. 
+
 Simple and brief path traversal and filesystem access library. This library is a bit different that other path manipulation libraries:
 
 * Path are subclasses of strings. You can use them anyhere you would use a string.
