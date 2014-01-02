@@ -522,3 +522,9 @@ Working with files in a .zip::
 
     >>> pth.ZipPath.from_string('tests/bogus')
     <Path 'tests/bogus'>
+
+
+.. image:: https://d2weczhvl823v0.cloudfront.net/ionelmc/python-pth/trend.png
+   :alt: Bitdeli badge
+   :target: https://bitdeli.com/free
+
