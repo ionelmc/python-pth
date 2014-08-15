@@ -216,6 +216,8 @@ class ZipPath(Path):
             self.__zipobj.getinfo(path + '/')
         except KeyError:
             return False
+        else:
+            return True
 
     @property
     def isfile(self):

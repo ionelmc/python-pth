@@ -112,6 +112,18 @@ Looping over children, including files in .zip files::
     tests/test.zip/B.TXT
     tests/test.zip/a.txt
 
+    >>> for i in sorted([i for i in p.files]): print(i)
+    tests/b.txt
+
+    >>> for i in sorted([i for i in p.dirs]): print(i)
+    tests/a
+    tests/test.zip
+
+    >>> for i in sorted([i for i in p.list]): print(i)
+    tests/a
+    tests/b.txt
+    tests/test.zip
+
 Trying to access inexisting property::
 
     >>> p.bogus
@@ -319,6 +331,18 @@ Zip stuff::
     ('tests/test.zip/B.TXT',..."<ZipPath 'tests/test.zip' / 'B.TXT'>")
     ('tests/test.zip/a.txt',..."<ZipPath 'tests/test.zip' / 'a.txt'>")
 
+    >>> for i in z.files: print((str(i), repr(i)))
+    ('tests/test.zip/B.TXT',..."<ZipPath 'tests/test.zip' / 'B.TXT'>")
+    ('tests/test.zip/a.txt',..."<ZipPath 'tests/test.zip' / 'a.txt'>")
+
+    >>> for i in z.dirs: print((str(i), repr(i)))
+    ('tests/test.zip/1',...... "<ZipPath 'tests/test.zip' / '1/'>")
+
+    >>> for i in z.list: print((str(i), repr(i)))
+    ('tests/test.zip/1',...... "<ZipPath 'tests/test.zip' / '1/'>")
+    ('tests/test.zip/B.TXT',..."<ZipPath 'tests/test.zip' / 'B.TXT'>")
+    ('tests/test.zip/a.txt',..."<ZipPath 'tests/test.zip' / 'a.txt'>")
+
     >>> (z/'B.TXT')
     <ZipPath 'tests/test.zip' / 'B.TXT'>
 
@@ -496,6 +520,12 @@ Working with files in a .zip::
 
     >>> [i for i in z.tree]
     [<ZipPath 'tests/test.zip' / '1/'>, <ZipPath 'tests/test.zip' / '1/1.txt'>, <ZipPath 'tests/test.zip' / 'B.TXT'>, <ZipPath 'tests/test.zip' / 'a.txt'>]
+
+    >>> [i for i in z.files]
+    [<ZipPath 'tests/test.zip' / 'B.TXT'>, <ZipPath 'tests/test.zip' / 'a.txt'>]
+
+    >>> [i for i in z.dirs]
+    [<ZipPath 'tests/test.zip' / '1/'>]
 
     >>> pth.ZipPath('tests', '', '')
     <Path 'tests'>
