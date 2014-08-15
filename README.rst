@@ -113,8 +113,6 @@ Looping over children, including files in .zip files::
     tests/test.zip/1/1.txt
     tests/test.zip/B.TXT
     tests/test.zip/a.txt
-    tests/test_pth.py
-
 
 Trying to access inexisting property::
 
