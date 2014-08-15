@@ -104,7 +104,7 @@ Properties::
 
 Looping over children, including files in .zip files::
 
-    >>> for i in sorted([i for i in p]): print(i)
+    >>> for i in sorted([i for i in p.tree]): print(i)
     tests/a
     tests/a/a.txt
     tests/b.txt
@@ -211,7 +211,7 @@ Other properties::
     >>> p.drive
     ''
 
-    >>> [i for i in p/'xxx']
+    >>> [i for i in (p/'xxx').tree]
     Traceback (most recent call last):
     ...
     pth.PathMustBeDirectory: <Path 'tests/xxx'> is not a directory nor a zip !
@@ -317,7 +317,7 @@ Zip stuff::
     ...
     AttributeError: Not available here.
 
-    >>> for i in z: print((str(i), repr(i)))
+    >>> for i in z.tree: print((str(i), repr(i)))
     ('tests/test.zip/1',...... "<ZipPath 'tests/test.zip' / '1/'>")
     ('tests/test.zip/1/1.txt', "<ZipPath 'tests/test.zip' / '1/1.txt'>")
     ('tests/test.zip/B.TXT',..."<ZipPath 'tests/test.zip' / 'B.TXT'>")
@@ -488,7 +488,7 @@ Working with files in a .zip::
     >>> p('r')
     <zipfile.ZipExtFile ...>
 
-    >>> [i for i in p]
+    >>> [i for i in p.tree]
     Traceback (most recent call last):
     ...
     pth.PathMustBeDirectory: <ZipPath 'tests/test.zip' / 'B.TXT'> is not a directory !
@@ -498,7 +498,7 @@ Working with files in a .zip::
     ...
     pth.PathMustBeFile: <ZipPath 'tests/test.zip' / ''> is not a file !
 
-    >>> [i for i in z]
+    >>> [i for i in z.tree]
     [<ZipPath 'tests/test.zip' / '1/'>, <ZipPath 'tests/test.zip' / '1/1.txt'>, <ZipPath 'tests/test.zip' / 'B.TXT'>, <ZipPath 'tests/test.zip' / 'a.txt'>]
 
     >>> pth.ZipPath('tests', '', '')
@@ -511,7 +511,7 @@ Working with files in a .zip::
     >>> with t:
     ...     with (t/"booo.txt")('w+') as f:
     ...         _ = f.write("test")
-    ...     print([i for i in t])
+    ...     print([i for i in t.tree])
     [<Path '/tmp/.../booo.txt'>]
 
     >>> t.exists

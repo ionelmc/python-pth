@@ -109,7 +109,7 @@ class Path(str):
         for path in self.list:
             yield path
             if path.isdir:
-                for i in path:
+                for i in path.list:
                     yield i
 
     @property
@@ -277,6 +277,7 @@ class ZipPath(Path):
     def __repr__(self):
         return '<ZipPath %r / %r>' % (str(self.__zippath), str(self.__relpath))
 
+    @property
     def tree(self):
         if not self.isdir:
             raise PathMustBeDirectory("%r is not a directory !" % self)
@@ -285,6 +286,7 @@ class ZipPath(Path):
             if name.startswith(self.__relpath):
                 yield ZipPath(self.__zippath, self.__zipobj, name)
 
+    @property
     def list(self):
         if not self.isdir:
             raise PathMustBeDirectory("%r is not a directory !" % self)
@@ -321,5 +323,8 @@ pth.PathError = PathError
 pth.PathMustBeFile = PathMustBeFile
 pth.PathMustBeDirectory = PathMustBeDirectory
 pth.PathDoesNotExist = PathDoesNotExist
+pth.__name__ = __name__
+pth.__file__ = __file__
+pth.__package__ = __package__
 pth.__mod = sys.modules['pth']  # gotta do this, otherwise it gets garbage collected
 sys.modules['pth'] = pth
