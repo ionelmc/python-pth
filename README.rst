@@ -44,8 +44,6 @@ Simple and brief path traversal and filesystem access library. This library is a
   * ``os.listdir`` becomes a **property** named ``list``
   * ``os.walk`` becomes a **property** named ``tree``
 
-* Iterating through a *Path* object yields *Path* instances for all the children in the tree. This is equivalent to ``os.walk`` but without
-  having to do all that manual wrapping (it's so annoying !).
 * Calling a *Path* object calls ``open()`` on the path. Takes any argument ``open`` would take (except the filename ofcourse).
 * Transparent support for files in .zip files.
 
