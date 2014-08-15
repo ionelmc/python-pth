@@ -19,7 +19,7 @@ def read(*names, **kwargs):
 
 setup(
     name="pth",
-    version="0.1.0",
+    version="0.1.1",
     license="BSD",
     description="Simple and brief path traversal and filesystem access library.",
     long_description="%s\n%s" % (read("README.rst"), re.sub(":obj:`~?(.*?)`", r"``\1``", read("CHANGELOG.rst"))),

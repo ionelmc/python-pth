@@ -332,6 +332,6 @@ pth.PathDoesNotExist = PathDoesNotExist
 pth.__name__ = __name__
 pth.__file__ = __file__
 pth.__package__ = __package__
-pth.__version__ = "0.1.0"
+pth.__version__ = "0.1.1"
 pth.__mod = sys.modules['pth']  # gotta do this, otherwise it gets garbage collected
 sys.modules['pth'] = pth
