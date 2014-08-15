@@ -2,15 +2,25 @@
         python-pth
 ==========================
 
-.. image:: https://secure.travis-ci.org/ionelmc/python-pth.png?branch=master
-    :alt: Build Status
-    :target: http://travis-ci.org/ionelmc/python-pth
+.. image:: http://img.shields.io/travis/ionelmc/python-pth/master.png
+    :alt: Travis-CI Build Status
+    :target: https://travis-ci.org/ionelmc/python-pth
 
-.. image:: https://coveralls.io/repos/ionelmc/python-pth/badge.png?branch=master
+.. See: http://www.appveyor.com/docs/status-badges
+
+.. image:: https://ci.appveyor.com/api/projects/status/<security-token>/branch/master
+    :alt: AppVeyor Build Status
+    :target: https://ci.appveyor.com/project/ionelmc/python-pth
+
+.. image:: http://img.shields.io/coveralls/ionelmc/python-pth/master.png
     :alt: Coverage Status
     :target: https://coveralls.io/r/ionelmc/python-pth
 
-.. image:: https://badge.fury.io/py/pth.png
+.. image:: http://img.shields.io/pypi/v/pth.png
+    :alt: PYPI Package
+    :target: https://pypi.python.org/pypi/pth
+
+.. image:: http://img.shields.io/pypi/dm/pth.png
     :alt: PYPI Package
     :target: https://pypi.python.org/pypi/pth
 
@@ -21,25 +31,27 @@ Simple and brief path traversal and filesystem access library. This library is a
 * Path are subclasses of strings. You can use them anyhere you would use a string.
 * Almost everything from ``os.path`` is available as a **property** with the same name except:
 
-  * ``relpath`` and ``commonprefix`` are methods
-  * ``getsize`` becomes a property named ``size``
-  * ``getatime`` becomes a property named ``atime``
-  * ``getctime`` becomes a property named ``ctime``
-  * ``getmtime`` becomes a property named ``mtime``
-  * ``split`` becomes a method name ``splitpath`` as ``split`` is already a string method
-  * ``join`` becomes a method name ``joinpath`` as ``join`` is already a string method
-  * ``commonprefix`` is not implemented
-  * ``basename`` is aliased to ``name``
-  * ``dirname`` is aliased to ``dir``
+  * ``os.path.relpath`` are methods
+  * ``os.path.getsize`` becomes a property named ``size``
+  * ``os.path.getatime`` becomes a property named ``atime``
+  * ``os.path.getctime`` becomes a property named ``ctime``
+  * ``os.path.getmtime`` becomes a property named ``mtime``
+  * ``os.path.split`` becomes a method name ``splitpath`` as ``split`` is already a string method
+  * ``os.path.join`` becomes a method name ``joinpath`` as ``join`` is already a string method
+  * ``os.path.commonprefix`` is not implemented
+  * ``os.path.basename`` becomes a property named ``name``
+  * ``os.path.dirname`` becomes a property named ``dir``
+  * ``os.listdir`` becomes a property named ``list``
+  * ``os.walk`` becomes a property named ``tree``
 
 * Iterating through a *Path* object yields *Path* instances for all the children in the tree. This is equivalent to ``os.walk`` but without
   having to do all that manual wrapping (it's so annoying !).
 * Calling a *Path* object calls ``open()`` on the path. Takes any argument ``open`` would take (except the filename ofcourse).
 * Transparent support for files in .zip files.
 
-Basically it is designed for extreme brevity. It has some disadvantages because of this:
-* Path objects don't work exactly like strings - it's iterator returns child paths not characters.
-* ???
+Basically it is designed for extreme brevity. It shares `Unipath <https://pypi.python.org/pypi/Unipath/>`_'s
+str-subclassing approach and and it has seamless zip support (like Twisted's `ZipPath
+<http://twistedmatrix.com/trac/browser/trunk/twisted/python/zippath.py>`_).
 
 Usage
 -----
@@ -522,4 +534,3 @@ Working with files in a .zip::
 
     >>> pth.ZipPath.from_string('tests/bogus')
     <Path 'tests/bogus'>
-
