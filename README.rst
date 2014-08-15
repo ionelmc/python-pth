@@ -82,6 +82,9 @@ Joining paths::
     >>> p/"a"/"b"/"c"/"d"
     <Path 'tests/a/b/c/d'>
 
+    >>> p/"/root"
+    <Path '/root'>
+
 Properties::
 
     >>> p.abspath
@@ -526,6 +529,20 @@ Working with files in a .zip::
 
     >>> [i for i in z.dirs]
     [<ZipPath 'tests/test.zip' / '1/'>]
+
+Note that there's this inconsistency with joining absolute paths::
+
+    >>> z/pth('/root')
+    <Path '/root'>
+
+Vs::
+
+    >>> z/'/root'
+    <ZipPath 'tests/test.zip' / '/root'>
+
+.. note:: TODO
+
+::
 
     >>> pth.ZipPath('tests', '', '')
     <Path 'tests'>
