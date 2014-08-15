@@ -3,14 +3,13 @@ from __future__ import print_function
 import errno
 import os
 import shutil
-import stat
 import sys
 import tempfile
 import time
 import zipfile
-from functools import wraps
 
 PY2 = sys.version_info[0] == 2
+
 
 if PY2:
     def exec_(_code_, _globs_=None, _locs_=None):
@@ -32,18 +31,22 @@ else:
     def raise_(tp, value):
         raise tp(value)
 
+
 class PathError(Exception):
-    def __str__(self):
-        return 'crap'
+    pass
+
 
 class PathMustBeDirectory(PathError):
     pass
 
+
 class PathMustBeFile(PathError):
     pass
 
+
 class PathDoesNotExist(PathError):
     pass
+
 
 def pth(path='.'):
     if zipfile.is_zipfile(path):
@@ -56,14 +59,19 @@ method = lambda func: lambda self, *args, **kwargs: pth(func(self, *args, **kwar
 attribute = lambda func: property(lambda self: pth(func(self)))
 raw_attribute = property
 nth_attribute = lambda func, position: property(lambda path: func(path)[position])
+
+
 @property
 def unavailable(self):
     raise AttributeError("Not available here.")
+
+
 def pair_attribute(func, first_func=identity, second_func=identity):
     def pair_attribute_wrapper(self):
         first_value, second_value = func(self)
         return first_func(first_value), second_func(second_value)
     return property(pair_attribute_wrapper)
+
 
 class Path(str):
     abs = abspath = attribute(os.path.abspath)
@@ -92,21 +100,37 @@ class Path(str):
     splitext = pair_attribute(os.path.splitext, pth, identity)
     drive = nth_attribute(os.path.splitdrive, 0)
     ext = nth_attribute(os.path.splitext, 1)
-    __length_hint__ = unavailable
 
     def __repr__(self):
         return '<Path %s>' % super(Path, self).__repr__()
 
-    def __iter__(self):
+    @property
+    def tree(self):
+        for path in self.list:
+            yield path
+            if path.isdir:
+                for i in path:
+                    yield i
+
+    @property
+    def files(self):
+        for path in self.list:
+            if path.isfile:
+                yield path
+
+    @property
+    def dirs(self):
+        for path in self.list:
+            if path.isdir:
+                yield path
+
+    @property
+    def list(self):
         if not self.isdir:
             raise PathMustBeDirectory("%r is not a directory nor a zip !" % self)
 
         for name in os.listdir(self):
-            path = pth(os.path.join(self, name))
-            yield path
-            if path.isdir:
-                for name in path:
-                    yield name
+            yield pth(os.path.join(self, name))
 
     def __call__(self, *open_args, **open_kwargs):
         if not self.isdir:
@@ -130,6 +154,7 @@ class ZipPath(Path):
     abs = abspath = zippath_attribute(os.path.abspath)
     name = basename = attribute(os.path.basename)
     dir = dirname = attribute(os.path.dirname)
+
     @property
     def exists(self):
         path = self.__relpath.rstrip('/')
@@ -137,12 +162,13 @@ class ZipPath(Path):
             return True
         try:
             self.__zipobj.getinfo(path)
-        except KeyError as exc:
+        except KeyError:
             try:
                 self.__zipobj.getinfo(path)
-            except KeyError as exc:
+            except KeyError:
                 return False
         return True
+
     expanduser = zippath_attribute(os.path.expanduser)
     expandvars = property(lambda self: ZipPath(
         os.path.expandvars(self.__zippath),
@@ -150,6 +176,7 @@ class ZipPath(Path):
         os.path.expandvars(self.__relpath),
     ))
     atime = unavailable
+
     @property
     def ctime(self):
         path = self.__relpath.rstrip('/')
@@ -162,6 +189,7 @@ class ZipPath(Path):
         else:
             return time.mktime(zi.date_time + (-1, -1, 0))
     mtime = unavailable
+
     @property
     def size(self):
         path = self.__relpath.rstrip('/')
@@ -173,7 +201,9 @@ class ZipPath(Path):
             raise_(PathDoesNotExist, exc)
         else:
             return zi.file_size
+
     isabs = raw_attribute(os.path.isabs)
+
     @property
     def isdir(self):
         path = self.__relpath.rstrip('/')
@@ -181,8 +211,9 @@ class ZipPath(Path):
             return True
         try:
             self.__zipobj.getinfo(path + '/')
-        except KeyError as exc:
+        except KeyError:
             return False
+
     @property
     def isfile(self):
         path = self.__relpath.rstrip('/')
@@ -190,17 +221,20 @@ class ZipPath(Path):
             return False
         try:
             self.__zipobj.getinfo(path)
-        except KeyError as exc:
+        except KeyError:
             return False
         else:
             return True
+
     islink = raw_attribute(os.path.islink)
     ismount = raw_attribute(os.path.ismount)
+
     def joinpath(self, *paths):
         for i in reversed(paths):
             if isinstance(i, Path) and i.isabs:
                 return i
         return ZipPath(self.__zippath, self.__zipobj, os.path.join(self.__relpath, *paths))
+
     __div__ = __floordiv__ = __truediv__ = joinpath
     lexists = unavailable
     normcase = zippath_attribute(os.path.normcase)
@@ -243,12 +277,20 @@ class ZipPath(Path):
     def __repr__(self):
         return '<ZipPath %r / %r>' % (str(self.__zippath), str(self.__relpath))
 
-    def __iter__(self):
+    def tree(self):
         if not self.isdir:
             raise PathMustBeDirectory("%r is not a directory !" % self)
 
         for name in self.__zipobj.namelist():
             if name.startswith(self.__relpath):
+                yield ZipPath(self.__zippath, self.__zipobj, name)
+
+    def list(self):
+        if not self.isdir:
+            raise PathMustBeDirectory("%r is not a directory !" % self)
+
+        for name in self.__zipobj.namelist():
+            if '/' not in name.rstrip('/'):
                 yield ZipPath(self.__zippath, self.__zipobj, name)
 
     def __call__(self, *open_args, **open_kwargs):
@@ -257,9 +299,6 @@ class ZipPath(Path):
         else:
             raise PathMustBeFile("%r is not a file !" % self)
 
-    def __div__(self, other):
-
-        return ZipPath(self.__zippath, self.__zipobj, os.path.join(self.__relpath, str(other)))
 
 class TempPath(Path):
     def __new__(cls, **mkdtemp_kwargs):
@@ -274,6 +313,7 @@ class TempPath(Path):
     def __repr__(self):
         return '<TempPath %s>' % super(Path, self).__repr__()
 
+
 pth.Path = Path
 pth.ZipPath = ZipPath
 pth.TempPath = TempPath
@@ -281,7 +321,5 @@ pth.PathError = PathError
 pth.PathMustBeFile = PathMustBeFile
 pth.PathMustBeDirectory = PathMustBeDirectory
 pth.PathDoesNotExist = PathDoesNotExist
-import traceback
-traceback.extract_stack
-pth.__mod = sys.modules['pth'] # gotta do this, otherwise it gets garbage collected
+pth.__mod = sys.modules['pth']  # gotta do this, otherwise it gets garbage collected
 sys.modules['pth'] = pth
