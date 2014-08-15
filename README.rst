@@ -59,7 +59,7 @@ Usage
 Getting started::
 
     >>> import pth
-    >>> pth
+    >>> pth  # the module is a function!
     <function pth at ...>
     >>> p = pth("a.txt")
     >>> p
@@ -68,12 +68,10 @@ Getting started::
     <Path 'a.txt'>
 
 
-Doctests
---------
+API
+---
 
 ::
-
-    >>> import pth
 
     >>> p = pth('tests')
     >>> p
