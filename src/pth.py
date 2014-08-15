@@ -72,8 +72,10 @@ def pair_attribute(func, first_func=identity, second_func=identity):
         return first_func(first_value), second_func(second_value)
     return property(pair_attribute_wrapper)
 
+string = os.path.supports_unicode_filenames and unicode or str  # flake8: noqa
 
-class Path(str):
+
+class Path(string):
     abs = abspath = attribute(os.path.abspath)
     name = basename = attribute(os.path.basename)
     dir = dirname = attribute(os.path.dirname)
@@ -109,7 +111,7 @@ class Path(str):
         for path in self.list:
             yield path
             if path.isdir:
-                for i in path.list:
+                for i in path.tree:
                     yield i
 
     @property
@@ -149,6 +151,7 @@ zippath_attribute = lambda func: property(lambda self: ZipPath(
     self._ZipPath__zipobj,
     self._ZipPath__relpath,
 ))
+
 
 class ZipPath(Path):
     abs = abspath = zippath_attribute(os.path.abspath)
@@ -250,7 +253,7 @@ class ZipPath(Path):
     def __new__(cls, path, zipobj, relpath=""):
         if not zipfile.is_zipfile(path):
             return pth(os.path.join(path, relpath).rstrip('/'))
-        obj = str.__new__(cls, os.path.join(path, relpath).rstrip('/'))
+        obj = string.__new__(cls, os.path.join(path, relpath).rstrip('/'))
         obj.__zippath = path
         obj.__zipobj = zipobj
         obj.__relpath = relpath
@@ -292,8 +295,9 @@ class ZipPath(Path):
             raise PathMustBeDirectory("%r is not a directory !" % self)
 
         for name in self.__zipobj.namelist():
-            if '/' not in name.rstrip('/'):
-                yield ZipPath(self.__zippath, self.__zipobj, name)
+            if name.startswith(self.__relpath):
+                if '/' not in name[len(self.__relpath):].strip('/'):
+                    yield ZipPath(self.__zippath, self.__zipobj, name)
 
     def __call__(self, *open_args, **open_kwargs):
         if self.isfile:
@@ -304,7 +308,7 @@ class ZipPath(Path):
 
 class TempPath(Path):
     def __new__(cls, **mkdtemp_kwargs):
-        return str.__new__(cls, tempfile.mkdtemp(**mkdtemp_kwargs))
+        return string.__new__(cls, tempfile.mkdtemp(**mkdtemp_kwargs))
 
     def __enter__(self):
         return self
