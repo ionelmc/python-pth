@@ -31,18 +31,18 @@ Simple and brief path traversal and filesystem access library. This library is a
 * Path are subclasses of strings. You can use them anyhere you would use a string.
 * Almost everything from ``os.path`` is available as a **property** with the same name except:
 
-  * ``os.path.relpath`` are methods
-  * ``os.path.getsize`` becomes a property named ``size``
-  * ``os.path.getatime`` becomes a property named ``atime``
-  * ``os.path.getctime`` becomes a property named ``ctime``
-  * ``os.path.getmtime`` becomes a property named ``mtime``
-  * ``os.path.split`` becomes a method name ``splitpath`` as ``split`` is already a string method
-  * ``os.path.join`` becomes a method name ``joinpath`` as ``join`` is already a string method
-  * ``os.path.commonprefix`` is not implemented
-  * ``os.path.basename`` becomes a property named ``name``
-  * ``os.path.dirname`` becomes a property named ``dir``
-  * ``os.listdir`` becomes a property named ``list``
-  * ``os.walk`` becomes a property named ``tree``
+  * ``os.path.relpath`` is a **method**
+  * ``os.path.getsize`` becomes a **property** named ``size``
+  * ``os.path.getatime`` becomes a **property** named ``atime``
+  * ``os.path.getctime`` becomes a **property** named ``ctime``
+  * ``os.path.getmtime`` becomes a **property** named ``mtime``
+  * ``os.path.split`` becomes a **method** name ``splitpath`` as ``split`` is already a string method
+  * ``os.path.join`` becomes a **method** name ``joinpath`` as ``join`` is already a string method
+  * ``os.path.commonprefix`` *is not implemented*
+  * ``os.path.basename`` becomes a **property** named ``name``
+  * ``os.path.dirname`` becomes a **property** named ``dir``
+  * ``os.listdir`` becomes a **property** named ``list``
+  * ``os.walk`` becomes a **property** named ``tree``
 
 * Iterating through a *Path* object yields *Path* instances for all the children in the tree. This is equivalent to ``os.walk`` but without
   having to do all that manual wrapping (it's so annoying !).
