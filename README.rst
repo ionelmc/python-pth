@@ -521,6 +521,8 @@ Working with files in a .zip::
     ...
     pth.PathMustBeFile: <ZipPath 'tests/test.zip' / ''> is not a file !
 
+Iterating though the contents of the zip::
+
     >>> [i for i in z.tree]
     [<ZipPath 'tests/test.zip' / '1/'>, <ZipPath 'tests/test.zip' / '1/1.txt'>, <ZipPath 'tests/test.zip' / 'B.TXT'>, <ZipPath 'tests/test.zip' / 'a.txt'>]
 
@@ -540,25 +542,12 @@ Vs::
     >>> z/'/root'
     <ZipPath 'tests/test.zip' / '/root'>
 
-.. note:: TODO
+TODO: Make this nicer.
 
 ::
 
     >>> pth.ZipPath('tests', '', '')
     <Path 'tests'>
-
-    >>> t = pth.TempPath()
-    >>> t
-    <TempPath '/tmp/...'>
-
-    >>> with t:
-    ...     with (t/"booo.txt")('w+') as f:
-    ...         _ = f.write("test")
-    ...     print([i for i in t.tree])
-    [<Path '/tmp/.../booo.txt'>]
-
-    >>> t.exists
-    False
 
     >>> pth.ZipPath.from_string('/bogus/path/to/stuff/bla/bla/bla')
     <Path '/bogus/path/to/stuff/bla/bla/bla'>
@@ -577,3 +566,18 @@ Vs::
 
     >>> pth.ZipPath.from_string('tests/bogus')
     <Path 'tests/bogus'>
+
+And there's a *temporary path*::
+
+    >>> t = pth.TempPath()
+    >>> t
+    <TempPath '/tmp/...'>
+
+    >>> with t:
+    ...     with (t/"booo.txt")('w+') as f:
+    ...         _ = f.write("test")
+    ...     print([i for i in t.tree])
+    [<Path '/tmp/.../booo.txt'>]
+
+    >>> t.exists
+    False
