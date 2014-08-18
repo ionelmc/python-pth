@@ -95,8 +95,9 @@ class Path(string):
     lexists = raw_attribute(os.path.lexists)
     normcase = attribute(os.path.normcase)
     normpath = attribute(os.path.normpath)
-    realpath = attribute(os.path.realpath)
-    relpath = method(os.path.relpath)
+    norm = attribute(lambda self: os.path.normcase(os.path.normpath(self)))
+    real = realpath = attribute(os.path.realpath)
+    rel = relpath = method(os.path.relpath)
     splitpath = pair_attribute(os.path.split, pth, pth)
     splitdrive = pair_attribute(os.path.splitdrive, identity, pth)
     splitext = pair_attribute(os.path.splitext, pth, identity)
@@ -244,8 +245,26 @@ class ZipPath(Path):
     lexists = unavailable
     normcase = zippath_attribute(os.path.normcase)
     normpath = zippath_attribute(os.path.normpath)
-    realpath = zippath_attribute(os.path.realpath)
-    relpath = unavailable
+    normpath = zippath_attribute(lambda self: os.path.normcase(os.path.normpath(self)))
+    real = realpath = zippath_attribute(os.path.realpath)
+
+    def relpath(self, other):
+        if isinstance(other, ZipPath) and other.__zippath == self.__zippath:
+            try:
+                return ZipPath(
+                    "",
+                    self.__zipobj,
+                    os.path.relpath(
+                        os.path.join(self.__zippath, self.__relpath),
+                        os.path.join(self.__zippath, other.__relpath),
+                    )
+                )
+            except:
+                print(self.__relpath, other.__relpath)
+        else:
+            return pth(os.path.relpath(self, other))
+    rel = relpath
+
     splitpath = pair_attribute(os.path.split, pth, pth)
     splitdrive = pair_attribute(os.path.splitdrive, identity, lambda path: ZipPath.from_string(path))
     splitext = pair_attribute(os.path.splitext, lambda path: ZipPath.from_string(path), identity)

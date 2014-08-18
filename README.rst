@@ -345,6 +345,18 @@ Zip stuff::
     >>> (z/'B.TXT')
     <ZipPath 'tests/test.zip' / 'B.TXT'>
 
+    >>> str(z/'B.TXT')
+    'tests/test.zip/B.TXT'
+
+    >>> (z/'B.TXT').dirname
+    <ZipPath 'tests/test.zip' / ''>
+
+    >>> (z/'B.TXT').rel(z)
+    <Path 'B.TXT'>
+
+    >>> z.rel(z/'B.TXT')
+    <Path '..'>
+
     >>> (z/'B.TXT').exists
     True
 
@@ -495,9 +507,7 @@ Working with files in a .zip::
     pth.PathDoesNotExist: "There is no item named 'B.TXT/tete' in the archive"
 
     >>> p.relpath('tests')
-    Traceback (most recent call last):
-    ...
-    AttributeError: Not available here.
+    <Path 'test.zip/B.TXT'>
 
     >>> p.joinpath('tete')('rb')
     Traceback (most recent call last):
