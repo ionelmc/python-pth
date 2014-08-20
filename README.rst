@@ -99,6 +99,11 @@ Properties::
     >>> p2()
     <...'tests/b.txt'...mode...'r'...>
 
+    >>> pth('bogus-doesnt-exist')()
+    Traceback (most recent call last):
+      ...
+    pth.PathMustBeFile: [Errno 2] No such file or directory: ...
+
 Looping over children, including files in .zip files::
 
     >>> for i in sorted([i for i in p.tree]): print(i)
@@ -122,6 +127,12 @@ Looping over children, including files in .zip files::
     tests/a
     tests/b.txt
     tests/test.zip
+
+    >>> list(pth('bogus-doesnt-exist').tree)
+    Traceback (most recent call last):
+      ...
+    pth.PathMustBeDirectory: <Path 'bogus-doesnt-exist'> is not a directory nor a zip !
+
 
 Trying to access inexisting property::
 
