@@ -62,7 +62,7 @@ nth_attribute = lambda func, position: property(lambda path: func(path)[position
 
 
 @property
-def unavailable(self):
+def unavailable(_):
     raise AttributeError("Not available here.")
 
 
@@ -342,8 +342,8 @@ class TempPath(Path):
 
 
 pth.Path = Path
-pth.ZipPath = ZipPath
-pth.TempPath = TempPath
+pth.ZipPath = pth.zip = ZipPath
+pth.TempPath = pth.tmp = TempPath
 pth.PathError = PathError
 pth.PathMustBeFile = PathMustBeFile
 pth.PathMustBeDirectory = PathMustBeDirectory
