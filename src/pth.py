@@ -48,7 +48,8 @@ class PathDoesNotExist(PathError):
     pass
 
 
-def pth(path='.'):
+def pth(*parts):
+    path = os.path.join(*parts) if parts else os.path.curdir
     if zipfile.is_zipfile(path):
         return ZipPath(Path(path), zipfile.ZipFile(path))
     else:
@@ -134,6 +135,10 @@ class Path(string):
 
         for name in os.listdir(self):
             yield pth(os.path.join(self, name))
+
+    @property
+    def parts(self):
+        return [pth(part or os.path.sep) for part in self.split(os.path.sep)]
 
     def __call__(self, *open_args, **open_kwargs):
         if not self.isdir:

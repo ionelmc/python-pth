@@ -212,6 +212,18 @@ Other properties::
     >>> p.splitpath
     (<Path ''>, <Path 'tests'>)
 
+    >>> pth('a/b/c/d').splitpath
+    (<Path 'a/b/c'>, <Path 'd'>)
+
+    >>> pth('a/b/c/d').parts
+    [<Path 'a'>, <Path 'b'>, <Path 'c'>, <Path 'd'>]
+
+    >>> pth('/a/b/c/d').parts
+    [<Path '/'>, <Path 'a'>, <Path 'b'>, <Path 'c'>, <Path 'd'>]
+
+    >>> pth(*pth('/a/b/c/d').parts)
+    <Path '/a/b/c/d'>
+
     >>> p.splitdrive
     ('', <Path 'tests'>)
 
