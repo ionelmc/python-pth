@@ -69,7 +69,7 @@ API
 
 
 ============================= ================== ============================== ============================== ======================== =======
-os/os.path/shutil             path.py            Unipath                        pth.Path                       pth.ZipPath supported?   Notes
+os/os.path/shutil             path.py            Unipath                        pth.Path                       pth.ZipPath support?     Notes
 ============================= ================== ============================== ============================== ======================== =======
 os.path.abspath(p)            p.abspath()        p.absolute()                   ``p.abs``, ``p.abspath``       ✔                        Return absolute path.
 os.path.basename(p)           p.name             p.name                         ``p.name``, ``p.basename``     ✔
@@ -79,10 +79,10 @@ os.path.exists(p)             p.exists()         fsp.exists()                   
 os.path.lexists(p)            p.lexists()        fsp.lexists()                  ``p.lexists``                  ✘                        Does the symbolic link exist?
 os.path.expanduser(p)         p.expanduser()     p.expand_user()                ``p.expanduser``               ✔                        Expand "~" and "~user" prefix.
 os.path.expandvars(p)         p.expandvars()     p.expand_vars()                ``p.expandvars``               ✔                        Expand "$VAR" environment variables.
-os.path.getatime(p)           p.atime            fsp.atime()                                                                            Last access time.
-os.path.getmtime(p)           p.mtime            fsp.mtime()                                                                            Last modify time.
-os.path.getctime(p)           p.ctime            fsp.ctime()                                                                            Platform-specific "ctime".
-os.path.getsize(p)            p.size             fsp.size()                                                                             File size.
+os.path.getatime(p)           p.atime            fsp.atime()                    ``p.atime``                    ✘                        Last access time.
+os.path.getmtime(p)           p.mtime            fsp.mtime()                    ``p.mtime``                    ✘                        Last modify time.
+os.path.getctime(p)           p.ctime            fsp.ctime()                    ``p.ctime``                    ✔                        Platform-specific "ctime".
+os.path.getsize(p)            p.size             fsp.size()                     ``p.size``                     ✔                        File size.
 os.path.isabs(p)              p.isabs()          p.isabsolute                                                                           Is path absolute?
 os.path.isfile(p)             p.isfile()         fsp.isfile()                                                                           Is a file?
 os.path.isdir(p)              p.isdir()          fsp.isdir()                                                                            Is a directory?
@@ -182,7 +182,7 @@ os.path.splitdrive(p)[0]      p.drive            ―                            
 -                             ―                  p.ancestor(N)                                                                          Same as specifying .parent N times.
 -                             ―                  p.child(...)                                                                           "Safe" way to join paths.
 -                             ―                  fsp.needs_update(...)                                                                  True if self is missing or older than any of the other paths.
-============================= ================== ==============================                                                         =======
+============================= ================== ============================== ============================== ======================== =======
 
 ::
 

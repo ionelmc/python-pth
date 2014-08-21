@@ -65,7 +65,7 @@ nth_attribute = lambda func, position: property(lambda path: func(path)[position
 
 @property
 def unavailable(_):
-    raise AttributeError("Not available here.")
+    raise NotImplementedError("Not available here.")
 
 
 def expect_directory(func):
@@ -226,7 +226,14 @@ class ZipPath(Path):
         self.__zipobj,
         os.path.expandvars(self.__relpath),
     ))
-    atime = unavailable
+
+    @property
+    def atime(self):
+        path = self.__relpath.rstrip('/')
+        if not path:
+            return self.__zippath.atime
+        else:
+            raise NotImplementedError("Not supported for files inside the zip.")
 
     @property
     def ctime(self):
@@ -239,7 +246,14 @@ class ZipPath(Path):
             raise_(PathDoesNotExist, exc)
         else:
             return time.mktime(zi.date_time + (-1, -1, 0))
-    mtime = unavailable
+
+    @property
+    def mtime(self):
+        path = self.__relpath.rstrip('/')
+        if not path:
+            return self.__zippath.mtime
+        else:
+            raise NotImplementedError("Not supported for files inside the zip.")
 
     @property
     def size(self):
