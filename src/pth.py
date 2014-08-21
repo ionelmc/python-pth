@@ -7,6 +7,7 @@ import sys
 import tempfile
 import time
 import zipfile
+from functools import wraps
 
 PY2 = sys.version_info[0] == 2
 
@@ -67,6 +68,16 @@ def unavailable(_):
     raise AttributeError("Not available here.")
 
 
+def expect_directory(func):
+    @wraps(func)
+    def expect_directory_wrapper(self, *args):
+        if not self.isdir:
+            raise PathMustBeDirectory("%r is not a directory nor a zip !" % self)
+        else:
+            return func(self, *args)
+    return expect_directory_wrapper
+
+
 def pair_attribute(func, first_func=identity, second_func=identity):
     def pair_attribute_wrapper(self):
         first_value, second_value = func(self)
@@ -76,45 +87,16 @@ def pair_attribute(func, first_func=identity, second_func=identity):
 string = os.path.supports_unicode_filenames and unicode or str  # flake8: noqa
 
 
-class Path(string):
-    abs = abspath = attribute(os.path.abspath)
+class AbstractPath(string):
     name = basename = attribute(os.path.basename)
     dir = dirname = attribute(os.path.dirname)
-    exists = raw_attribute(os.path.exists)
-    expanduser = attribute(os.path.expanduser)
-    expandvars = attribute(os.path.expandvars)
-    atime = raw_attribute(os.path.getatime)
-    ctime = raw_attribute(os.path.getctime)
-    mtime = raw_attribute(os.path.getmtime)
-    size = raw_attribute(os.path.getsize)
     isabs = raw_attribute(os.path.isabs)
-    isdir = raw_attribute(os.path.isdir)
-    isfile = raw_attribute(os.path.isfile)
-    islink = raw_attribute(os.path.islink)
-    ismount = raw_attribute(os.path.ismount)
-    joinpath = __div__ = __floordiv__ = __truediv__ = method(os.path.join)
-    lexists = raw_attribute(os.path.lexists)
-    normcase = attribute(os.path.normcase)
-    normpath = attribute(os.path.normpath)
-    norm = attribute(lambda self: os.path.normcase(os.path.normpath(self)))
-    real = realpath = attribute(os.path.realpath)
-    rel = relpath = method(os.path.relpath)
     splitpath = pair_attribute(os.path.split, pth, pth)
-    splitdrive = pair_attribute(os.path.splitdrive, identity, pth)
-    splitext = pair_attribute(os.path.splitext, pth, identity)
     drive = nth_attribute(os.path.splitdrive, 0)
     ext = nth_attribute(os.path.splitext, 1)
 
     def __repr__(self):
-        return '<Path %s>' % super(Path, self).__repr__()
-
-    @property
-    def tree(self):
-        for path in self.list:
-            yield path
-            if path.isdir:
-                for i in path.tree:
-                    yield i
+        return 'pth.Path(%r)' % string(self)
 
     @property
     def files(self):
@@ -129,16 +111,46 @@ class Path(string):
                 yield path
 
     @property
-    def list(self):
-        if not self.isdir:
-            raise PathMustBeDirectory("%r is not a directory nor a zip !" % self)
-
-        for name in os.listdir(self):
-            yield pth(os.path.join(self, name))
-
-    @property
     def parts(self):
         return [pth(part or os.path.sep) for part in self.split(os.path.sep)]
+
+
+class Path(AbstractPath):
+    abs = abspath = attribute(os.path.abspath)
+    exists = raw_attribute(os.path.exists)
+    lexists = raw_attribute(os.path.lexists)
+    expanduser = attribute(os.path.expanduser)
+    expandvars = attribute(os.path.expandvars)
+    atime = raw_attribute(os.path.getatime)
+    ctime = raw_attribute(os.path.getctime)
+    mtime = raw_attribute(os.path.getmtime)
+    size = raw_attribute(os.path.getsize)
+    isdir = raw_attribute(os.path.isdir)
+    isfile = raw_attribute(os.path.isfile)
+    islink = raw_attribute(os.path.islink)
+    ismount = raw_attribute(os.path.ismount)
+    joinpath = __div__ = __floordiv__ = __truediv__ = method(os.path.join)
+    normcase = attribute(os.path.normcase)
+    normpath = attribute(os.path.normpath)
+    norm = attribute(lambda self: os.path.normcase(os.path.normpath(self)))
+    real = realpath = attribute(os.path.realpath)
+    rel = relpath = method(os.path.relpath)
+    splitdrive = pair_attribute(os.path.splitdrive, identity, pth)
+    splitext = pair_attribute(os.path.splitext, pth, identity)
+
+    @property
+    def tree(self):
+        for path in self.list:
+            yield path
+            if path.isdir:
+                for i in path.tree:
+                    yield i
+
+    @property
+    @expect_directory
+    def list(self):
+        for name in os.listdir(self):
+            yield pth(os.path.join(self, name))
 
     def __call__(self, *open_args, **open_kwargs):
         if not self.isdir:
@@ -152,6 +164,36 @@ class Path(string):
         else:
             raise PathMustBeFile("%r is not a file !" % self)
 
+    @property
+    def cd(self):
+        return WorkingDir(self)
+
+    def copy(self, dest):
+        if not isinstance(dest, Path):
+            dest = Path(dest)
+        if dest.isdir:
+            dest = dest / self.name
+        shutil.copyfile(self, dest)
+        return dest
+
+
+class WorkingDir(Path):
+    previous = None
+
+    @expect_directory
+    def __enter__(self):
+        self.previous = Path(os.getcwd())
+        os.chdir(self)
+        return self
+    __call__ = __enter__
+
+    def __exit__(self, *exc):
+        os.chdir(self.previous)
+
+    def __repr__(self):
+        return 'pth.WorkingDir(%r)' % string(self)
+
+
 zippath_attribute = lambda func: property(lambda self: ZipPath(
     func(self._ZipPath__zippath),
     self._ZipPath__zipobj,
@@ -161,11 +203,11 @@ zippath_attribute = lambda func: property(lambda self: ZipPath(
 
 class ZipPath(Path):
     abs = abspath = zippath_attribute(os.path.abspath)
-    name = basename = attribute(os.path.basename)
-    dir = dirname = attribute(os.path.dirname)
 
     @property
     def exists(self):
+        if not os.path.exists(self.__zippath):
+            return False
         path = self.__relpath.rstrip('/')
         if not path:
             return True
@@ -211,8 +253,6 @@ class ZipPath(Path):
         else:
             return zi.file_size
 
-    isabs = raw_attribute(os.path.isabs)
-
     @property
     def isdir(self):
         path = self.__relpath.rstrip('/')
@@ -250,7 +290,7 @@ class ZipPath(Path):
     lexists = unavailable
     normcase = zippath_attribute(os.path.normcase)
     normpath = zippath_attribute(os.path.normpath)
-    normpath = zippath_attribute(lambda self: os.path.normcase(os.path.normpath(self)))
+    norm = zippath_attribute(lambda self: os.path.normcase(os.path.normpath(self)))
     real = realpath = zippath_attribute(os.path.realpath)
 
     def relpath(self, other):
@@ -270,18 +310,15 @@ class ZipPath(Path):
             return pth(os.path.relpath(self, other))
     rel = relpath
 
-    splitpath = pair_attribute(os.path.split, pth, pth)
     splitdrive = pair_attribute(os.path.splitdrive, identity, lambda path: ZipPath.from_string(path))
     splitext = pair_attribute(os.path.splitext, lambda path: ZipPath.from_string(path), identity)
-    drive = nth_attribute(os.path.splitdrive, 0)
-    ext = nth_attribute(os.path.splitext, 1)
 
-    def __new__(cls, path, zipobj, relpath=""):
+    def __new__(cls, path, zipobj=None, relpath=""):
         if not zipfile.is_zipfile(path):
             return pth(os.path.join(path, relpath).rstrip('/'))
         obj = string.__new__(cls, os.path.join(path, relpath).rstrip('/'))
         obj.__zippath = path
-        obj.__zipobj = zipobj
+        obj.__zipobj = zipfile.ZipFile(path) if zipobj is None else zipobj
         obj.__relpath = relpath
         return obj
 
@@ -304,7 +341,7 @@ class ZipPath(Path):
             return lead
 
     def __repr__(self):
-        return '<ZipPath %r / %r>' % (str(self.__zippath), str(self.__relpath))
+        return 'pth.ZipPath(%r, None, %r)' % (str(self.__zippath), str(self.__relpath))
 
     @property
     def tree(self):
@@ -349,6 +386,7 @@ class TempPath(Path):
 pth.Path = Path
 pth.ZipPath = pth.zip = ZipPath
 pth.TempPath = pth.tmp = TempPath
+pth.WorkingDir = pth.wd = WorkingDir
 pth.PathError = PathError
 pth.PathMustBeFile = PathMustBeFile
 pth.PathMustBeDirectory = PathMustBeDirectory
