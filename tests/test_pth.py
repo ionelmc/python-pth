@@ -1,9 +1,14 @@
 import os
+import sys
 import zipfile
+
 from aspectlib.test import Story
-from pytest import mark, raises
+from pytest import mark
+from pytest import raises
 
 import pth
+
+PY2 = sys.version_info[0] == 2
 
 
 def test_basename():
@@ -36,14 +41,15 @@ def test_dirname():
 
 
 def test_dirname_zip():
-    assert pth.ZipPath("tests/test.zip").dir == "tests"
-    assert pth.ZipPath("tests/test.zip").dirname == "tests"
+    zp = os.path.join("tests", "test.zip")
+    assert pth.ZipPath(zp).dir == "tests"
+    assert pth.ZipPath(zp).dirname == "tests"
 
-    assert (pth.ZipPath("tests/test.zip") / "a").dir == "tests/test.zip"
-    assert (pth.ZipPath("tests/test.zip") / "a").dirname == "tests/test.zip"
+    assert (pth.ZipPath(zp) / "a").dir == zp
+    assert (pth.ZipPath(zp) / "a").dirname == zp
 
-    assert (pth.ZipPath("tests/test.zip") / "a" / "b").dir == "tests/test.zip/a"
-    assert (pth.ZipPath("tests/test.zip") / "a" / "b").dirname == "tests/test.zip/a"
+    assert (pth.ZipPath(zp) / "a" / "b").dir == os.path.join(zp, "a")
+    assert (pth.ZipPath(zp) / "a" / "b").dirname == os.path.join(zp, "a")
 
 
 def test_exists():
@@ -87,6 +93,7 @@ def test_repr():
     assert repr(pth('/bogus')) == "pth.Path('/bogus')"
 
 
+@mark.skipif(sys.platform == 'win32', reason="it's more complicated ...")
 def test_cd():
     assert repr(pth('/bogus').cd) == "pth.WorkingDir('/bogus')"
 
@@ -96,10 +103,11 @@ def test_cd():
         os.getcwd() == '/current'  # returns
         os.chdir(pth.WorkingDir('/bogus')) == None  # returns
 
-    with story.replay():
+    with story.replay(strict=False):
         pth('/bogus').cd()
 
 
+@mark.skipif(sys.platform == 'win32', reason="it's more complicated ...")
 def test_cd_context():
     with Story(['zipfile.is_zipfile', 'os.chdir', 'os.getcwd', 'os.path.exists', 'os.stat']) as story:
         zipfile.is_zipfile('/bogus') == False  # returns
@@ -146,10 +154,10 @@ def test_expanduser_zip():
 
 def test_expandvars():
     os.environ['FOOBAR'] = "1"
-    assert pth('tests/test.zip/$FOOBAR').expandvars == os.path.join('tests', 'test.zip', '1')
+    assert pth('tests', 'test.zip', '$FOOBAR').expandvars == os.path.join('tests', 'test.zip', '1')
 
     os.environ['FOOBAR'] = "test"
-    assert isinstance(pth('tests/$FOOBAR.zip').expandvars, pth.ZipPath)
+    assert isinstance(pth('tests', '$FOOBAR.zip').expandvars, pth.ZipPath)
 
 
 def test_time():
@@ -171,12 +179,80 @@ def test_time_zip():
 
 
 def test_size():
-    assert isinstance(pth().size, int)
-    assert pth('tests/b.txt').size == 1
+    assert isinstance(pth().size, (int, long if PY2 else int))
+    assert pth('tests', 'b.txt').size == 1
 
 
 def test_size_zip():
-    assert (pth('tests/test.zip') / 'a.txt').size == 1
-    assert (pth('tests/test.zip') / '1').isdir
-    raises(pth.PathDoesNotExist, lambda: (pth('tests/test.zip') / '1').size)  # yeeeep, can't differentiate isdir from non-existing
+    assert (pth('tests', 'test.zip') / 'a.txt').size == 1
+    assert (pth('tests', 'test.zip') / '1').isdir
+    raises(pth.PathDoesNotExist, lambda: (pth('tests', 'test.zip') / '1').size)  # yeeeep, can't differentiate isdir from non-existing
 
+
+def test_isabs():
+    assert not pth().isabs
+    assert pth().abs.isabs
+    assert pth(os.path.sep).isabs
+
+
+def test_isabs_zip():
+    assert not (pth('tests', 'test.zip') / 'a.txt').isabs
+    assert (pth('tests', 'test.zip') / 'a.txt').abs.isabs
+
+    assert not pth('tests', 'test.zip').isabs
+    assert pth('tests', 'test.zip').abs.isabs
+
+
+def test_isdir():
+    assert pth().isdir
+    assert pth('tests').isdir
+    assert not pth('tests', 'b.txt').isdir
+
+
+def test_isdir_zip():
+    assert pth('tests', 'test.zip').isdir
+    assert (pth('tests', 'test.zip') / '1').isdir
+    assert (pth('tests', 'test.zip') / '1/').isdir
+    assert not (pth('tests', 'test.zip') / 'a.txt').isdir
+
+
+def test_isfile():
+    assert not pth().isfile
+    assert not pth('tests').isfile
+    assert pth('tests', 'b.txt').isfile
+
+
+def test_isfile_zip():
+    assert not (pth('tests', 'test.zip') / '1').isfile
+    assert not (pth('tests', 'test.zip') / '1/').isfile
+    assert (pth('tests', 'test.zip') / 'a.txt').isfile
+
+
+def test_islink():
+    assert not pth().islink
+
+
+def test_islink_zip():
+    assert not (pth('tests', 'test.zip') / 'a.txt').islink
+
+
+def test_ismount():
+    assert not pth().ismount
+
+
+def test_ismount_zip():
+    assert not (pth('tests', 'test.zip') / 'a.txt').ismount
+
+
+
+def test_joinpath():
+    assert pth('a').joinpath('b') == os.path.join('a', 'b')
+
+
+def test_joinpath_zip():
+    assert pth('tests', 'test.zip').joinpath('b') == os.path.join('tests', 'test.zip', 'b')
+    assert pth('tests', 'test.zip').joinpath('b').joinpath('c') == os.path.join('tests', 'test.zip', 'b', 'c')
+
+
+def test_joinpath():
+    assert pth('a').joinpath('b') == os.path.join('a', 'b')
