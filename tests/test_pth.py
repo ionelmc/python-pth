@@ -2,6 +2,8 @@ import os
 import sys
 import zipfile
 
+from fields import Fields
+from fields import Namespace
 from aspectlib.test import Story
 from pytest import mark
 from pytest import raises
@@ -244,15 +246,153 @@ def test_ismount_zip():
     assert not (pth('tests', 'test.zip') / 'a.txt').ismount
 
 
-
 def test_joinpath():
     assert pth('a').joinpath('b') == os.path.join('a', 'b')
 
 
 def test_joinpath_zip():
-    assert pth('tests', 'test.zip').joinpath('b') == os.path.join('tests', 'test.zip', 'b')
-    assert pth('tests', 'test.zip').joinpath('b').joinpath('c') == os.path.join('tests', 'test.zip', 'b', 'c')
+    z = pth('tests', 'test.zip').joinpath('b')
+    assert isinstance(z, pth.ZipPath)
+    assert z == os.path.join('tests', 'test.zip', 'b')
+    assert z.joinpath('c') == os.path.join('tests', 'test.zip', 'b', 'c')
 
 
-def test_joinpath():
-    assert pth('a').joinpath('b') == os.path.join('a', 'b')
+def test_eq():
+    assert pth('a') == 'a'
+
+
+def test_splitpath():
+    assert pth(os.path.join('a', 'b')).splitpath == ('a', 'b')
+    assert pth(os.path.join('a', 'b')).pathsplit == ('a', 'b')
+
+
+def test_splitpath_zip():
+    z = pth('tests', 'test.zip').joinpath('b')
+    assert isinstance(z, pth.ZipPath)
+    assert z.splitpath == (os.path.join('tests', 'test.zip'), 'b')
+    assert z.joinpath('c').splitpath == (os.path.join('tests', 'test.zip', 'b'), 'c')
+
+if sys.platform == 'win32':
+    def test_splitdrive():
+        assert pth(r'c:\asdf\qwer').splitdrive == ('c:', r'\asdf\qwer')
+        assert pth(r'c:\asdf\qwer').drivesplit == ('c:', r'\asdf\qwer')
+
+    def test_splitdrive_zip():
+        z = pth('tests', 'test.zip').joinpath('b')
+        assert z.abs.splitdrive == os.path.splitdrive(z.abs)
+        assert z.abs.drivesplit == os.path.splitdrive(z.abs)
+        assert isinstance(z.abs.drivesplit[1], pth.ZipPath)
+        assert isinstance(z.abs.splitdrive[1], pth.ZipPath)
+else:
+    def test_splitdrive():
+        assert pth(r'c:\asdf\qwer').splitdrive == ('', r'c:\asdf\qwer')
+        assert pth(r'c:\asdf\qwer').drivesplit == ('', r'c:\asdf\qwer')
+
+    def test_splitdrive_zip():
+        z = pth('tests', 'test.zip').joinpath('b')
+        assert z.abs.splitdrive == ('', z.abs)
+        assert z.abs.drivesplit == ('', z.abs)
+        assert isinstance(z.abs.drivesplit[1], pth.ZipPath)
+        assert isinstance(z.abs.splitdrive[1], pth.ZipPath)
+
+
+def test_splitext():
+    assert pth('a.b.c').splitext == ('a.b', '.c')
+    assert pth('a.b.c').extsplit == ('a.b', '.c')
+
+
+def test_splitext_zip():
+    z = pth('tests', 'test.zip').joinpath('b.c.d')
+    assert z.splitext == (os.path.join('tests', 'test.zip', 'b.c'), '.d')
+    assert z.extsplit == (os.path.join('tests', 'test.zip', 'b.c'), '.d')
+    assert isinstance(z.splitext[0], pth.ZipPath)
+    assert isinstance(z.extsplit[0], pth.ZipPath)
+
+
+def test_splitext_zip_on_root():
+    z = pth('tests', 'test.zip')
+    assert z.splitext == (os.path.join('tests', 'test'), '.zip')
+    assert z.extsplit == (os.path.join('tests', 'test'), '.zip')
+    assert not isinstance(z.splitext[0], pth.ZipPath)
+    assert not isinstance(z.extsplit[0], pth.ZipPath)
+
+
+def test_cd_call():
+    with Story(['os.stat', 'os.chdir', 'os.getcwd']) as story:
+        os.stat(pth.WorkingDir('other')) == Namespace(st_mode=16893)
+        os.getcwd() == '/foobar'  # returns
+        os.chdir(pth.WorkingDir('other')) == None  # returns
+
+
+    with story.replay():
+        cd = pth('other').cd
+        assert cd == 'other'
+        assert cd.previous is None
+        cd()
+
+
+def test_cd_context_manager():
+    with Story(['os.stat', 'os.chdir', 'os.getcwd']) as story:
+        os.stat(pth.WorkingDir('other')) == Namespace(st_mode=16893)
+        os.getcwd() == '/foobar'  # returns
+        os.chdir(pth.WorkingDir('other')) == None  # returns
+        os.chdir(pth.Path('/foobar')) == None  # returns
+
+    with story.replay():
+        with pth('other').cd as wd:
+            assert wd == 'other'
+            assert wd.previous == '/foobar'
+
+
+def test_cd_context_manager_call():
+    with Story(['os.stat', 'os.chdir', 'os.getcwd']) as story:
+        os.stat(pth.WorkingDir('other')) == Namespace(st_mode=16893)
+        os.getcwd() == '/foobar'  # returns
+        os.chdir(pth.WorkingDir('other')) == None  # returns
+        os.chdir(pth.Path('/foobar')) == None  # returns
+
+    with story.replay():
+        with pth('other').cd() as wd:
+            assert wd == 'other'
+            assert wd.previous == '/foobar'
+
+
+def test_cd_context_manager_call_call():
+    with Story(['os.stat', 'os.chdir', 'os.getcwd']) as story:
+        os.stat(pth.WorkingDir('other')) == Namespace(st_mode=16893)
+        os.getcwd() == '/foobar'  # returns
+        os.chdir(pth.WorkingDir('other')) == None  # returns
+        os.chdir(pth.Path('/foobar')) == None  # returns
+
+    with story.replay():
+        with pth('other').cd() as wd:
+            assert wd == 'other'
+            assert wd.previous == '/foobar'
+            raises(pth.WorkingDirAlreadyActive, lambda: wd())
+            assert wd.previous == '/foobar'
+
+
+def test_cd_context_manager_call_context_manager():
+    with Story(['os.stat', 'os.chdir', 'os.getcwd']) as story:
+        os.stat(pth.WorkingDir('other')) == Namespace(st_mode=16893)
+        os.getcwd() == '/foobar'  # returns
+        os.chdir(pth.WorkingDir('other')) == None  # returns
+        os.chdir(pth.Path('/foobar')) == None  # returns
+
+    with story.replay():
+        with pth('other').cd() as wd:
+            assert wd == 'other'
+            assert wd.previous == '/foobar'
+            raises(pth.WorkingDirAlreadyActive, wd.__enter__)
+            assert wd.previous == '/foobar'
+
+
+def test_cwd():
+    with Story(['os.getcwd']) as story:
+        os.getcwd() == '/foobar'  # returns
+
+    with story.replay():
+        assert pth.cwd == '/foobar'
+        assert isinstance(pth.cwd, pth.Path)
+
+

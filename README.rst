@@ -88,10 +88,10 @@ API
         - ✔
         - The last component.
     -   - ``os.path.commonprefix(p)``
-        - ―
-        - ―
-        - ―
-        - ―
+        - ✖
+        - ✖
+        - ✖
+        - ✖
         - Common prefix.
     -   - ``os.path.dirname(p)``
         - ``p.parent``
@@ -109,7 +109,7 @@ API
         - ``p.lexists()``
         - ``fsp.lexists()``
         - ``p.lexists``
-        - ✘
+        - ✖
         - Does the symbolic link exist?
     -   - ``os.path.expanduser(p)``
         - ``p.expanduser()``
@@ -127,13 +127,13 @@ API
         - ``p.atime``
         - ``fsp.atime()``
         - ``p.atime``
-        - ✘
+        - ✖
         - Last access time.
     -   - ``os.path.getmtime(p)``
         - ``p.mtime``
         - ``fsp.mtime()``
         - ``p.mtime``
-        - ✘
+        - ✖
         - Last modify time.
     -   - ``os.path.getctime(p)``
         - ``p.ctime``
@@ -208,70 +208,70 @@ API
         - ✔
         - True if both paths point to the same filesystem item.
     -   - ``os.path.sameopenfile(d1, d2)``
-        - ―
-        - ―
-        - ―
-        - ―
+        - ✖
+        - ✖
+        - ✖
+        - ✖
         -
     -   - ``os.path.samestat(st1, st2)``
-        - ―
-        - ―
-        - ―
-        - ―
+        - ✖
+        - ✖
+        - ✖
+        - ✖
         -
     -   - ``os.path.split(p)``
         - ``p.splitpath()``
-        - ``(p.parent, p.name)``
-        - ?
-        - ?
+        - ``(p.parent, p.name)``, ``p.splitpath``, ``p.pathsplit``
+        - ✔
+        - ✔
         - Split path at basename.
     -   - ``os.path.splitdrive(p)``
         - ``p.splitdrive()``
-        - ―
-        - ?
-        - ?
+        - ✖
+        - ✔
+        - ✔
         -
     -   - ``os.path.splitext(p)``
         - ``p.splitext()``
-        - ―
-        - ?
-        - ?
+        - ✖
+        - ✔
+        - ✔
         -
     -   - ``os.path.splitunc(p)``
         - ``p.splitunc()``
-        - ―
-        - ?
-        - ?
+        - ✖
+        - ✖
+        - ✖
         -
     -   - ``os.path.walk(p, func, args)``
-        - ―
-        - ―
-        - ?
-        - ?
-        -
+        - ✖
+        - ✖
+        - ✖
+        - ✖
+        - ✖
     -   - ``os.access(p, const)``
         - ``p.access(const)``
-        - ―
-        - ?
-        - ?
-        -
+        - ✖
+        - ✖
+        - ✖
+        - ✖
     -   - ``os.chdir(d)``
-        - ―
+        - ✖
         - ``fsd.chdir()``
-        - ?
-        - ?
+        - ``p.cd()``, ``with p.cd:``
+        - ✖
         - Change current directory.
     -   - ``os.fchdir(fd)``
-        - ―
-        - ―
-        -
-        -
+        - ✖
+        - ✖
+        - ✖
+        - ✖
         - Not a path operation.
     -   - ``os.getcwd()``
         - ``path.getcwd()``
         - ``FSPath.cwd()``
-        - ?
-        - ?
+        - ✔
+        - ✖
         - Get current directory.
     -   - ``os.chroot(d)``
         - ``d.chroot()``

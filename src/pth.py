@@ -51,12 +51,19 @@ class PathDoesNotExist(PathError):
     pass
 
 
-def pth(*parts):
-    path = ospath.join(*parts) if parts else ospath.curdir
-    if zipfile.is_zipfile(path):
-        return ZipPath(Path(path), zipfile.ZipFile(path))
-    else:
-        return Path(path)
+class PTH(object):
+    @property
+    def cwd(self):
+        return pth(os.getcwd())
+
+    def __call__(self, *parts):
+        path = ospath.join(*parts) if parts else ospath.curdir
+        if zipfile.is_zipfile(path):
+            return ZipPath(Path(path), zipfile.ZipFile(path))
+        else:
+            return Path(path)
+
+pth = PTH()
 
 identity = lambda x: x
 method = lambda func: lambda self, *args, **kwargs: pth(func(self, *args, **kwargs))
@@ -93,7 +100,7 @@ class AbstractPath(string):
     name = basename = attribute(ospath.basename)
     dir = dirname = attribute(ospath.dirname)
     isabs = raw_attribute(ospath.isabs)
-    splitpath = pair_attribute(ospath.split, pth, pth)
+    pathsplit = splitpath = pair_attribute(ospath.split, pth, pth)
     drive = nth_attribute(ospath.splitdrive, 0)
     ext = nth_attribute(ospath.splitext, 1)
 
@@ -138,8 +145,8 @@ class Path(AbstractPath):
     real = realpath = attribute(ospath.realpath)
     rel = relpath = method(ospath.relpath)
     same = samefile = method(ospath.samefile)
-    splitdrive = pair_attribute(ospath.splitdrive, identity, pth)
-    splitext = pair_attribute(ospath.splitext, pth, identity)
+    drivesplit = splitdrive = pair_attribute(ospath.splitdrive, identity, pth)
+    extsplit = splitext = pair_attribute(ospath.splitext, pth, identity)
 
     @property
     def tree(self):
@@ -180,15 +187,30 @@ class Path(AbstractPath):
         return dest
 
 
+class WorkingDirAlreadyActive(Exception):
+    pass
+
+
 class WorkingDir(Path):
     previous = None
+    __in_context = False
 
     @expect_directory
-    def __enter__(self):
+    def __cd(self):
         self.previous = Path(os.getcwd())
         os.chdir(self)
         return self
-    __call__ = __enter__
+
+    def __enter__(self):
+        if self.__in_context:
+            raise WorkingDirAlreadyActive("Already switched to %r" % self)
+        self.__in_context = True
+        return self.__cd()
+
+    def __call__(self):
+        if self.__in_context:
+            raise WorkingDirAlreadyActive("Already switched to %r" % self)
+        return self.__cd()
 
     def __exit__(self, *exc):
         os.chdir(self.previous)
@@ -324,8 +346,8 @@ class ZipPath(Path):
             return pth(ospath.relpath(self, other))
     rel = relpath
 
-    splitdrive = pair_attribute(ospath.splitdrive, identity, lambda path: ZipPath.from_string(path))
-    splitext = pair_attribute(ospath.splitext, lambda path: ZipPath.from_string(path), identity)
+    drivesplit = splitdrive = pair_attribute(ospath.splitdrive, identity, lambda path: ZipPath.from_string(path))
+    extsplit = splitext = pair_attribute(ospath.splitext, lambda path: ZipPath.from_string(path), identity)
 
     def __new__(cls, path, zipobj=None, relpath=""):
         if not zipfile.is_zipfile(path):
@@ -402,6 +424,7 @@ pth.Path = Path
 pth.ZipPath = pth.zip = ZipPath
 pth.TempPath = pth.tmp = TempPath
 pth.WorkingDir = pth.wd = WorkingDir
+pth.WorkingDirAlreadyActive = WorkingDirAlreadyActive
 pth.PathError = PathError
 pth.PathMustBeFile = PathMustBeFile
 pth.PathMustBeDirectory = PathMustBeDirectory
