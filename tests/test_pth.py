@@ -396,7 +396,7 @@ def test_cwd():
         assert isinstance(pth.cwd, pth.Path)
 
 
-def test_cwd():
+def test_chmod():
     with Story(['os.chmod']) as story:
         os.chmod(pth.Path('foobar'), 0o666) == 'ok'
 
