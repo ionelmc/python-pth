@@ -65,11 +65,12 @@ class PTH(object):
 
 pth = PTH()
 
-identity = lambda x: x
-method = lambda func: lambda self, *args, **kwargs: pth(func(self, *args, **kwargs))
-attribute = lambda func: property(lambda self: pth(func(self)))
-raw_attribute = property
-nth_attribute = lambda func, position: property(lambda path: func(path)[position])
+#identity = lambda x: x
+#method = lambda func: lambda self, *args, **kwargs: pth(func(self, *args, **kwargs))
+#raw_method = lambda func: lambda self, *args, **kwargs: func(self, *args, **kwargs)
+#attribute = lambda func: property(lambda self: pth(func(self)))
+#raw_attribute = property
+#nth_attribute = lambda func, position: property(lambda path: func(path)[position])
 
 
 @property
@@ -87,22 +88,27 @@ def expect_directory(func):
     return expect_directory_wrapper
 
 
-def pair_attribute(func, first_func=identity, second_func=identity):
-    def pair_attribute_wrapper(self):
-        first_value, second_value = func(self)
-        return first_func(first_value), second_func(second_value)
-    return property(pair_attribute_wrapper)
+#def pair_attribute(func, first_func=identity, second_func=identity):
+#    def pair_attribute_wrapper(self):
+#        first_value, second_value = func(self)
+#        return first_func(first_value), second_func(second_value)
+#    return property(pair_attribute_wrapper)
 
 string = str  # flake8: noqa
 
 
 class AbstractPath(string):
-    name = basename = attribute(ospath.basename)
-    dir = dirname = attribute(ospath.dirname)
-    isabs = raw_attribute(ospath.isabs)
-    pathsplit = splitpath = pair_attribute(ospath.split, pth, pth)
-    drive = nth_attribute(ospath.splitdrive, 0)
-    ext = nth_attribute(ospath.splitext, 1)
+    name = basename = property(lambda self: pth(ospath.basename(self)))
+    dir = dirname = property(lambda self: pth(ospath.dirname(self)))
+    isabs = property(lambda self: ospath.isabs(self))
+
+    @property
+    def splitpath(self):
+        first, second = ospath.split(self)
+        return pth(first), pth(second)
+    pathsplit = splitpath
+    drive = property(lambda self: ospath.splitdrive(self)[0])
+    ext = property(lambda self: ospath.splitext(self)[1])
 
     def __repr__(self):
         return 'pth.Path(%r)' % string(self)
@@ -125,28 +131,40 @@ class AbstractPath(string):
 
 
 class Path(AbstractPath):
-    abs = abspath = attribute(ospath.abspath)
-    exists = raw_attribute(ospath.exists)
-    lexists = raw_attribute(ospath.lexists)
-    expanduser = attribute(ospath.expanduser)
-    expandvars = attribute(ospath.expandvars)
-    atime = raw_attribute(ospath.getatime)
-    ctime = raw_attribute(ospath.getctime)
-    mtime = raw_attribute(ospath.getmtime)
-    size = raw_attribute(ospath.getsize)
-    isdir = raw_attribute(ospath.isdir)
-    isfile = raw_attribute(ospath.isfile)
-    islink = raw_attribute(ospath.islink)
-    ismount = raw_attribute(ospath.ismount)
-    joinpath = __div__ = __floordiv__ = __truediv__ = method(ospath.join)
-    normcase = attribute(ospath.normcase)
-    normpath = attribute(ospath.normpath)
-    norm = attribute(lambda self: ospath.normcase(ospath.normpath(self)))
-    real = realpath = attribute(ospath.realpath)
-    rel = relpath = method(ospath.relpath)
-    same = samefile = method(ospath.samefile)
-    drivesplit = splitdrive = pair_attribute(ospath.splitdrive, identity, pth)
-    extsplit = splitext = pair_attribute(ospath.splitext, pth, identity)
+    abs = abspath = property(lambda self: pth(ospath.abspath(self)))
+    exists = property(lambda self: ospath.exists(self))
+    lexists = property(lambda self: ospath.lexists(self))
+    expanduser = property(lambda self: pth(ospath.expanduser(self)))
+    expandvars = property(lambda self: pth(ospath.expandvars(self)))
+    atime = property(lambda self: ospath.getatime(self))
+    ctime = property(lambda self: ospath.getctime(self))
+    mtime = property(lambda self: ospath.getmtime(self))
+    size = property(lambda self: ospath.getsize(self))
+    isdir = property(lambda self: ospath.isdir(self))
+    isfile = property(lambda self: ospath.isfile(self))
+    islink = property(lambda self: ospath.islink(self))
+    ismount = property(lambda self: ospath.ismount(self))
+    lambda func: lambda self, *args, **kwargs: pth(func(self, *args, **kwargs))
+    joinpath = __div__ = __floordiv__ = __truediv__ = lambda self, *args: pth(ospath.join(self, *args))
+    normcase = property(lambda self: pth(ospath.normcase(self)))
+    normpath = property(lambda self: pth(ospath.normpath(self)))
+    norm = property(lambda self: pth(ospath.normcase(ospath.normpath(self))))
+    real = realpath = property(lambda self: pth(ospath.realpath(self)))
+    rel = relpath = lambda self, start: pth(ospath.relpath(self, start))
+    same = samefile = lambda self, other: ospath.samefile(self, other)
+
+    @property
+    def splitdrive(self):
+        first, second = ospath.splitdrive(self)
+        return first, pth(second)
+    drivesplit = splitdrive
+
+    @property
+    def splitext(self):
+        first, second = ospath.splitext(self)
+        return pth(first), second
+    extsplit = splitext
+    chmod = lambda self, *args, **kwargs: os.chmod(self, *args, **kwargs)
 
     @property
     def tree(self):
@@ -316,8 +334,8 @@ class ZipPath(Path):
         else:
             return True
 
-    islink = raw_attribute(ospath.islink)
-    ismount = raw_attribute(ospath.ismount)
+    islink = property(lambda self: ospath.islink(self))
+    ismount = property(lambda self: ospath.ismount(self))
 
     def joinpath(self, *paths):
         for i in reversed(paths):
@@ -346,8 +364,17 @@ class ZipPath(Path):
             return pth(ospath.relpath(self, other))
     rel = relpath
 
-    drivesplit = splitdrive = pair_attribute(ospath.splitdrive, identity, lambda path: ZipPath.from_string(path))
-    extsplit = splitext = pair_attribute(ospath.splitext, lambda path: ZipPath.from_string(path), identity)
+    @property
+    def splitdrive(self):
+        first, second = ospath.splitdrive(self)
+        return first, ZipPath.from_string(second)
+    drivesplit = splitdrive
+
+    @property
+    def splitext(self):
+        first, second = ospath.splitext(self)
+        return ZipPath.from_string(first), second
+    extsplit = splitext
 
     def __new__(cls, path, zipobj=None, relpath=""):
         if not zipfile.is_zipfile(path):

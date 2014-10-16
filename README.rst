@@ -275,15 +275,15 @@ API
         - Get current directory.
     -   - ``os.chroot(d)``
         - ``d.chroot()``
-        - ―
-        - ?
-        - ?
-        -
+        - ✖
+        - ✖
+        - ✖
+        - ✖
     -   - ``os.chmod(p, 0644)``
         - ``p.chmod(0644)``
         - ``fsp.chmod(0644)``
-        - ?
-        - ?
+        - ``p.chmod(0644)``
+        - ✖
         - Change mode (permission bits).
     -   - ``os.chown(p, uid, gid)``
         - ``p.chown(uid, gid)``
