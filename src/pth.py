@@ -65,14 +65,6 @@ class PTH(object):
 
 pth = PTH()
 
-#identity = lambda x: x
-#method = lambda func: lambda self, *args, **kwargs: pth(func(self, *args, **kwargs))
-#raw_method = lambda func: lambda self, *args, **kwargs: func(self, *args, **kwargs)
-#attribute = lambda func: property(lambda self: pth(func(self)))
-#raw_attribute = property
-#nth_attribute = lambda func, position: property(lambda path: func(path)[position])
-
-
 @property
 def unavailable(_):
     raise NotImplementedError("Not available here.")
@@ -87,12 +79,6 @@ def expect_directory(func):
             return func(self, *args)
     return expect_directory_wrapper
 
-
-#def pair_attribute(func, first_func=identity, second_func=identity):
-#    def pair_attribute_wrapper(self):
-#        first_value, second_value = func(self)
-#        return first_func(first_value), second_func(second_value)
-#    return property(pair_attribute_wrapper)
 
 string = str  # flake8: noqa
 
@@ -144,7 +130,6 @@ class Path(AbstractPath):
     isfile = property(lambda self: ospath.isfile(self))
     islink = property(lambda self: ospath.islink(self))
     ismount = property(lambda self: ospath.ismount(self))
-    lambda func: lambda self, *args, **kwargs: pth(func(self, *args, **kwargs))
     joinpath = __div__ = __floordiv__ = __truediv__ = lambda self, *args: pth(ospath.join(self, *args))
     normcase = property(lambda self: pth(ospath.normcase(self)))
     normpath = property(lambda self: pth(ospath.normpath(self)))
