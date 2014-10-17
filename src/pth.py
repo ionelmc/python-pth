@@ -84,7 +84,7 @@ string = str  # flake8: noqa
 
 
 class AbstractPath(string):
-    name = basename = property(lambda self: pth(ospath.basename(self)))
+    stem = basename = property(lambda self: pth(ospath.basename(self)))
     dir = dirname = property(lambda self: pth(ospath.dirname(self)))
     isabs = property(lambda self: ospath.isabs(self))
 
@@ -95,6 +95,7 @@ class AbstractPath(string):
     pathsplit = splitpath
     drive = property(lambda self: ospath.splitdrive(self)[0])
     ext = property(lambda self: ospath.splitext(self)[1])
+    name = property(lambda self: ospath.splitext(ospath.basename(self))[0])
 
     def __repr__(self):
         return 'pth.Path(%r)' % string(self)
