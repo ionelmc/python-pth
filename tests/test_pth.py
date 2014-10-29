@@ -1,3 +1,5 @@
+# encoding: utf-8
+#from __future__ import unicode_literals
 import os
 import sys
 import zipfile
@@ -23,14 +25,14 @@ def test_basename():
 
 
 def test_basename_zip():
-    assert pth.ZipPath("tests/test.zip").name == "test.zip"
-    assert pth.ZipPath("tests/test.zip").basename == "test.zip"
+    assert pth.ZipPath("tests/files/test.zip").name == "test.zip"
+    assert pth.ZipPath("tests/files/test.zip").basename == "test.zip"
 
-    assert (pth.ZipPath("tests/test.zip") / 'a').name == "a"
-    assert (pth.ZipPath("tests/test.zip") / 'a').basename == "a"
+    assert (pth.ZipPath("tests/files/test.zip") / 'a').name == "a"
+    assert (pth.ZipPath("tests/files/test.zip") / 'a').basename == "a"
 
-    assert (pth.ZipPath("tests/test.zip") / 'a' / 'b').name == "b"
-    assert (pth.ZipPath("tests/test.zip") / 'a' / 'b').basename == "b"
+    assert (pth.ZipPath("tests/files/test.zip") / 'a' / 'b').name == "b"
+    assert (pth.ZipPath("tests/files/test.zip") / 'a' / 'b').basename == "b"
 
 
 def test_dirname():
@@ -66,7 +68,7 @@ def test_lexists():
 
 def test_exists_zip():
     with pth.tmp() as tmp:
-        zp = pth.Path('tests/test.zip').copy(tmp)
+        zp = pth.Path('tests/files/test.zip').copy(tmp)
         with tmp.cd:
             assert (pth("test.zip") / "a.txt").exists
             assert not (pth("test.zip") / "crappo").exists
@@ -83,7 +85,7 @@ def test_abspath():
 
 def test_abspath_zip():
     with pth.tmp() as tmp:
-        pth.Path('tests/test.zip').copy(tmp)
+        pth.Path('tests/files/test.zip').copy(tmp)
         with tmp.cd:
             assert pth("test.zip").abs == tmp / "test.zip"
             assert pth("test.zip").abspath == tmp / "test.zip"
@@ -101,7 +103,8 @@ def test_cd():
 
     with Story(['zipfile.is_zipfile', 'os.chdir', 'os.getcwd', 'os.path.exists', 'os.stat']) as story:
         zipfile.is_zipfile('/bogus') == False  # returns
-        os.stat(pth.WorkingDir('/bogus')) == os.stat_result((17407, 2621441, 2049, 43, 0, 0, 3805184, 1406286835, 1408573505, 1408573505))  # returns
+        os.stat(pth.WorkingDir('/bogus')) == os.stat_result((
+            17407, 2621441, 2049, 43, 0, 0, 3805184, 1406286835, 1408573505, 1408573505))  # returns
         os.getcwd() == '/current'  # returns
         os.chdir(pth.WorkingDir('/bogus')) == None  # returns
 
@@ -113,7 +116,8 @@ def test_cd():
 def test_cd_context():
     with Story(['zipfile.is_zipfile', 'os.chdir', 'os.getcwd', 'os.path.exists', 'os.stat']) as story:
         zipfile.is_zipfile('/bogus') == False  # returns
-        os.stat(pth.WorkingDir('/bogus')) == os.stat_result((17407, 2621441, 2049, 43, 0, 0, 3805184, 1406286835, 1408573505, 1408573505))  # returns
+        os.stat(pth.WorkingDir('/bogus')) == os.stat_result((
+            17407, 2621441, 2049, 43, 0, 0, 3805184, 1406286835, 1408573505, 1408573505))  # returns
         os.getcwd() == '/current'  # returns
         os.chdir(pth.WorkingDir('/bogus')) == None  # returns
         os.chdir(pth.Path('/current')) == None  # returns
@@ -138,28 +142,28 @@ def test_expandvars():
 
 
 def test_zip_constructor():
-    assert isinstance(pth.zip('tests/test.zip', None, 'a.txt'), pth.ZipPath)
-    assert pth.zip('tests/test.zip', None, 'a.txt')('r').read() == b"A"
+    assert isinstance(pth.zip('tests/files/test.zip', None, 'a.txt'), pth.ZipPath)
+    assert pth.zip('tests/files/test.zip', None, 'a.txt')('r').read() == b"A"
 
 
 def test_zip_autocast():
-    assert isinstance(pth('tests/test.zip'), pth.ZipPath)
-    assert isinstance(pth('tests/test.zip')/'a', pth.ZipPath)
-    assert isinstance(pth('tests/test.zip')/'a/b', pth.ZipPath)
-    assert isinstance(pth('tests')/'test.zip', pth.ZipPath)
-    assert isinstance(pth('tests')/pth('test.zip'), pth.ZipPath)
+    assert isinstance(pth('tests/files/test.zip'), pth.ZipPath)
+    assert isinstance(pth('tests/files/test.zip')/'a', pth.ZipPath)
+    assert isinstance(pth('tests/files/test.zip')/'a/b', pth.ZipPath)
+    assert isinstance(pth('tests/files') / 'test.zip', pth.ZipPath)
+    assert isinstance(pth('tests/files') / pth('test.zip'), pth.ZipPath)
 
 
 def test_expanduser_zip():
-    assert pth('tests/test.zip/~root').expanduser == 'tests/test.zip/~root'
+    assert pth('tests/files/test.zip/~root').expanduser == 'tests/files/test.zip/~root'
 
 
 def test_expandvars():
     os.environ['FOOBAR'] = "1"
-    assert pth('tests', 'test.zip', '$FOOBAR').expandvars == os.path.join('tests', 'test.zip', '1')
+    assert pth('tests', 'files', 'test.zip', '$FOOBAR').expandvars == os.path.join('tests', 'files', 'test.zip', '1')
 
     os.environ['FOOBAR'] = "test"
-    assert isinstance(pth('tests', '$FOOBAR.zip').expandvars, pth.ZipPath)
+    assert isinstance(pth('tests', 'files', '$FOOBAR.zip').expandvars, pth.ZipPath)
 
 
 def test_time():
@@ -169,11 +173,11 @@ def test_time():
 
 
 def test_time_zip():
-    assert isinstance(pth('tests/test.zip').atime, float)
-    assert isinstance(pth('tests/test.zip').ctime, float)
-    assert isinstance(pth('tests/test.zip').mtime, float)
+    assert isinstance(pth('tests/files/test.zip').atime, float)
+    assert isinstance(pth('tests/files/test.zip').ctime, float)
+    assert isinstance(pth('tests/files/test.zip').mtime, float)
 
-    a = pth('tests/test.zip') / 'a.txt'
+    a = pth('tests/files/test.zip') / 'a.txt'
 
     assert raises(NotImplementedError, lambda: a.atime)
     assert isinstance(a.ctime, float)
@@ -182,13 +186,13 @@ def test_time_zip():
 
 def test_size():
     assert isinstance(pth().size, (int, long if PY2 else int))
-    assert pth('tests', 'b.txt').size == 1
+    assert pth('tests', 'files', 'b.txt').size == 1
 
 
 def test_size_zip():
-    assert (pth('tests', 'test.zip') / 'a.txt').size == 1
-    assert (pth('tests', 'test.zip') / '1').isdir
-    raises(pth.PathDoesNotExist, lambda: (pth('tests', 'test.zip') / '1').size)  # yeeeep, can't differentiate isdir from non-existing
+    assert (pth('tests', 'files', 'test.zip') / 'a.txt').size == 1
+    assert (pth('tests', 'files', 'test.zip') / '1').isdir
+    raises(pth.PathDoesNotExist, lambda: (pth('tests', 'files', 'test.zip') / '1').size)  # yeeeep, can't differentiate isdir from non-existing
 
 
 def test_isabs():
@@ -198,36 +202,36 @@ def test_isabs():
 
 
 def test_isabs_zip():
-    assert not (pth('tests', 'test.zip') / 'a.txt').isabs
-    assert (pth('tests', 'test.zip') / 'a.txt').abs.isabs
+    assert not (pth('tests', 'files', 'test.zip') / 'a.txt').isabs
+    assert (pth('tests', 'files', 'test.zip') / 'a.txt').abs.isabs
 
-    assert not pth('tests', 'test.zip').isabs
-    assert pth('tests', 'test.zip').abs.isabs
+    assert not pth('tests', 'files', 'test.zip').isabs
+    assert pth('tests', 'files', 'test.zip').abs.isabs
 
 
 def test_isdir():
     assert pth().isdir
     assert pth('tests').isdir
-    assert not pth('tests', 'b.txt').isdir
+    assert not pth('tests', 'files', 'b.txt').isdir
 
 
 def test_isdir_zip():
-    assert pth('tests', 'test.zip').isdir
-    assert (pth('tests', 'test.zip') / '1').isdir
-    assert (pth('tests', 'test.zip') / '1/').isdir
-    assert not (pth('tests', 'test.zip') / 'a.txt').isdir
+    assert pth('tests', 'files', 'test.zip').isdir
+    assert (pth('tests', 'files', 'test.zip') / '1').isdir
+    assert (pth('tests', 'files', 'test.zip') / '1/').isdir
+    assert not (pth('tests', 'files', 'test.zip') / 'a.txt').isdir
 
 
 def test_isfile():
     assert not pth().isfile
     assert not pth('tests').isfile
-    assert pth('tests', 'b.txt').isfile
+    assert pth('tests', 'files', 'b.txt').isfile
 
 
 def test_isfile_zip():
-    assert not (pth('tests', 'test.zip') / '1').isfile
-    assert not (pth('tests', 'test.zip') / '1/').isfile
-    assert (pth('tests', 'test.zip') / 'a.txt').isfile
+    assert not (pth('tests', 'files', 'test.zip') / '1').isfile
+    assert not (pth('tests', 'files', 'test.zip') / '1/').isfile
+    assert (pth('tests', 'files', 'test.zip') / 'a.txt').isfile
 
 
 def test_islink():
@@ -235,7 +239,7 @@ def test_islink():
 
 
 def test_islink_zip():
-    assert not (pth('tests', 'test.zip') / 'a.txt').islink
+    assert not (pth('tests', 'files', 'test.zip') / 'a.txt').islink
 
 
 def test_ismount():
@@ -243,7 +247,7 @@ def test_ismount():
 
 
 def test_ismount_zip():
-    assert not (pth('tests', 'test.zip') / 'a.txt').ismount
+    assert not (pth('tests', 'files', 'test.zip') / 'a.txt').ismount
 
 
 def test_joinpath():
@@ -251,10 +255,10 @@ def test_joinpath():
 
 
 def test_joinpath_zip():
-    z = pth('tests', 'test.zip').joinpath('b')
+    z = pth('tests', 'files', 'test.zip').joinpath('b')
     assert isinstance(z, pth.ZipPath)
-    assert z == os.path.join('tests', 'test.zip', 'b')
-    assert z.joinpath('c') == os.path.join('tests', 'test.zip', 'b', 'c')
+    assert z == os.path.join('tests', 'files', 'test.zip', 'b')
+    assert z.joinpath('c') == os.path.join('tests', 'files', 'test.zip', 'b', 'c')
 
 
 def test_eq():
@@ -267,10 +271,10 @@ def test_splitpath():
 
 
 def test_splitpath_zip():
-    z = pth('tests', 'test.zip').joinpath('b')
+    z = pth('tests', 'files', 'test.zip').joinpath('b')
     assert isinstance(z, pth.ZipPath)
-    assert z.splitpath == (os.path.join('tests', 'test.zip'), 'b')
-    assert z.joinpath('c').splitpath == (os.path.join('tests', 'test.zip', 'b'), 'c')
+    assert z.splitpath == (os.path.join('tests', 'files', 'test.zip'), 'b')
+    assert z.joinpath('c').splitpath == (os.path.join('tests', 'files', 'test.zip', 'b'), 'c')
 
 if sys.platform == 'win32':
     def test_splitdrive():
@@ -289,7 +293,7 @@ else:
         assert pth(r'c:\asdf\qwer').drivesplit == ('', r'c:\asdf\qwer')
 
     def test_splitdrive_zip():
-        z = pth('tests', 'test.zip').joinpath('b')
+        z = pth('tests', 'files', 'test.zip').joinpath('b')
         assert z.abs.splitdrive == ('', z.abs)
         assert z.abs.drivesplit == ('', z.abs)
         assert isinstance(z.abs.drivesplit[1], pth.ZipPath)
@@ -302,17 +306,17 @@ def test_splitext():
 
 
 def test_splitext_zip():
-    z = pth('tests', 'test.zip').joinpath('b.c.d')
-    assert z.splitext == (os.path.join('tests', 'test.zip', 'b.c'), '.d')
-    assert z.extsplit == (os.path.join('tests', 'test.zip', 'b.c'), '.d')
+    z = pth('tests', 'files', 'test.zip').joinpath('b.c.d')
+    assert z.splitext == (os.path.join('tests', 'files', 'test.zip', 'b.c'), '.d')
+    assert z.extsplit == (os.path.join('tests', 'files', 'test.zip', 'b.c'), '.d')
     assert isinstance(z.splitext[0], pth.ZipPath)
     assert isinstance(z.extsplit[0], pth.ZipPath)
 
 
 def test_splitext_zip_on_root():
-    z = pth('tests', 'test.zip')
-    assert z.splitext == (os.path.join('tests', 'test'), '.zip')
-    assert z.extsplit == (os.path.join('tests', 'test'), '.zip')
+    z = pth('tests', 'files', 'test.zip')
+    assert z.splitext == (os.path.join('tests', 'files', 'test'), '.zip')
+    assert z.extsplit == (os.path.join('tests', 'files', 'test'), '.zip')
     assert not isinstance(z.splitext[0], pth.ZipPath)
     assert not isinstance(z.extsplit[0], pth.ZipPath)
 
@@ -398,9 +402,68 @@ def test_cwd():
 
 def test_chmod():
     with Story(['os.chmod']) as story:
-        os.chmod(pth.Path('foobar'), 0o666) == 'ok'
+        os.chmod(pth.Path('foobar'), 0o666) == None
 
     with story.replay():
-        #assert
         pth('foobar').chmod(0o666)
-        #== 'ok'
+
+
+def test_chown():
+    with Story(['os.chown']) as story:
+        os.chown(pth.Path('foobar'), 123, 123) == None
+
+    with story.replay():
+        pth('foobar').chown(123, 123)
+
+
+def test_eq():
+    assert 'tests/files/b.txt' == pth('tests/files/b.txt')
+
+
+def test_gt():
+    assert pth('tests', 'files', 'trick.txt') > pth('tests', 'files', 'test.zip')
+
+
+def test_lt():
+    assert pth('tests', 'files', 'test.zip') < pth('tests', 'files', 'trick.txt')
+
+
+def test_tree():
+    assert sorted(list(pth('tests', 'files').tree)) == [
+        pth('tests', 'files', 'a'),
+        pth('tests', 'files', 'a', 'a.txt'),
+        pth('tests', 'files', 'b.txt'),
+        pth('tests', 'files', 'test.zip'),
+        pth('tests', 'files', 'test.zip', '1'),
+        pth('tests', 'files', 'test.zip', '1', '1.txt'),
+        pth('tests', 'files', 'test.zip', 'B.TXT'),
+        pth('tests', 'files', 'test.zip', 'a.txt'),
+        pth('tests', 'files', 'trîcky-năme'),
+    ]
+    raises(pth.PathMustBeDirectory, next, pth('bogus-doesnt-exist').tree)
+
+
+def test_files():
+    assert sorted(list(pth('tests', 'files').files)) == [
+        pth('tests', 'files', 'b.txt'),
+        pth('tests', 'files', 'trîcky-năme'),
+    ]
+    raises(pth.PathMustBeDirectory, next, pth('bogus-doesnt-exist').files)
+
+
+def test_dirs():
+    assert sorted(list(pth('tests', 'files').dirs)) == [
+        pth('tests', 'files', 'a'),
+        pth('tests', 'files', 'test.zip'),
+    ]
+    raises(pth.PathMustBeDirectory, next, pth('bogus-doesnt-exist').dirs)
+
+
+def test_list():
+    assert sorted(list(pth('tests', 'files').list)) == [
+        pth('tests', 'files', 'a'),
+        pth('tests', 'files', 'b.txt'),
+        pth('tests', 'files', 'test.zip'),
+        pth('tests', 'files', 'trîcky-năme'),
+    ]
+    raises(pth.PathMustBeDirectory, next, pth('bogus-doesnt-exist').list)

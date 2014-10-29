@@ -52,6 +52,7 @@ class PathDoesNotExist(PathError):
 
 
 class PTH(object):
+
     @property
     def cwd(self):
         return pth(os.getcwd())
@@ -65,26 +66,16 @@ class PTH(object):
 
 pth = PTH()
 
+
 @property
 def unavailable(_):
     raise NotImplementedError("Not available here.")
-
-
-def expect_directory(func):
-    @wraps(func)
-    def expect_directory_wrapper(self, *args):
-        if not self.isdir:
-            raise PathMustBeDirectory("%r is not a directory nor a zip !" % self)
-        else:
-            return func(self, *args)
-    return expect_directory_wrapper
-
 
 string = str  # flake8: noqa
 
 
 class AbstractPath(string):
-    stem = basename = property(lambda self: pth(ospath.basename(self)))
+    name = basename = property(lambda self: pth(ospath.basename(self)))
     dir = dirname = property(lambda self: pth(ospath.dirname(self)))
     isabs = property(lambda self: ospath.isabs(self))
 
@@ -95,7 +86,7 @@ class AbstractPath(string):
     pathsplit = splitpath
     drive = property(lambda self: ospath.splitdrive(self)[0])
     ext = property(lambda self: ospath.splitext(self)[1])
-    name = property(lambda self: ospath.splitext(ospath.basename(self))[0])
+    stem = property(lambda self: ospath.splitext(ospath.basename(self))[0])
 
     def __repr__(self):
         return 'pth.Path(%r)' % string(self)
@@ -150,7 +141,8 @@ class Path(AbstractPath):
         first, second = ospath.splitext(self)
         return pth(first), second
     extsplit = splitext
-    chmod = lambda self, *args, **kwargs: os.chmod(self, *args, **kwargs)
+    chmod = lambda self, mode: os.chmod(self, mode)
+    chown = lambda self, uid, gid: os.chown(self, uid, gid)
 
     @property
     def tree(self):
@@ -161,8 +153,10 @@ class Path(AbstractPath):
                     yield i
 
     @property
-    @expect_directory
     def list(self):
+        if not self.isdir:
+            raise PathMustBeDirectory("%r is not a directory nor a zip !" % self)
+
         for name in os.listdir(self):
             yield pth(ospath.join(self, name))
 
@@ -199,8 +193,10 @@ class WorkingDir(Path):
     previous = None
     __in_context = False
 
-    @expect_directory
     def __cd(self):
+        if not self.isdir:
+            raise PathMustBeDirectory("%r is not a directory!" % self)
+
         self.previous = Path(os.getcwd())
         os.chdir(self)
         return self
@@ -396,7 +392,7 @@ class ZipPath(Path):
     @property
     def tree(self):
         if not self.isdir:
-            raise PathMustBeDirectory("%r is not a directory !" % self)
+            raise PathMustBeDirectory("%r is not a directory!" % self)
 
         for name in self.__zipobj.namelist():
             if name.startswith(self.__relpath):
@@ -405,7 +401,7 @@ class ZipPath(Path):
     @property
     def list(self):
         if not self.isdir:
-            raise PathMustBeDirectory("%r is not a directory !" % self)
+            raise PathMustBeDirectory("%r is not a directory!" % self)
 
         for name in self.__zipobj.namelist():
             if name.startswith(self.__relpath):
