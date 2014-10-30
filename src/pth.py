@@ -1,17 +1,19 @@
 from __future__ import print_function
 
 import errno
-import posixpath
 import os
+import posixpath
 import shutil
 import sys
 import tempfile
 import time
 import zipfile
-from functools import wraps
 from os import path as ospath
 
+
 PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+DECENT_PY3 = sys.version_info[:2] >= (3, 3)
 
 
 if PY2:
@@ -129,6 +131,10 @@ class Path(AbstractPath):
     real = realpath = property(lambda self: pth(ospath.realpath(self)))
     rel = relpath = lambda self, start: pth(ospath.relpath(self, start))
     same = samefile = lambda self, other: ospath.samefile(self, other)
+    #isaccessible = access = lambda self, mode: os.access(self, mode)
+    #isexecutable
+    #isreadable
+    #iswritable
 
     @property
     def splitdrive(self):
@@ -141,8 +147,27 @@ class Path(AbstractPath):
         first, second = ospath.splitext(self)
         return pth(first), second
     extsplit = splitext
-    chmod = lambda self, mode: os.chmod(self, mode)
-    chown = lambda self, uid, gid: os.chown(self, uid, gid)
+
+    def chmod(self, mode, follow_symlinks=True):
+        if follow_symlinks:
+            return os.chmod(self, mode)
+        else:
+            if DECENT_PY3:
+                os.chmod(self, mode, follow_symlinks=follow_symlinks)
+            else:
+                os.lchmod(self, mode)
+
+    def chown(self, uid, gid, follow_symlinks=True):
+        if follow_symlinks:
+            os.chown(self, uid, gid)
+        else:
+            if DECENT_PY3:
+                os.chown(self, uid, gid, follow_symlinks=follow_symlinks)
+            else:
+                os.lchown(self, uid, gid)
+
+    lchmod = lambda self, mode: self.chmod(mode, follow_symlinks=False)
+    lchown = lambda self, uid, gid: self.chown(uid, gid, follow_symlinks=False)
 
     @property
     def tree(self):
@@ -427,7 +452,6 @@ class TempPath(Path):
 
     def __repr__(self):
         return '<TempPath %s>' % super(Path, self).__repr__()
-
 
 pth.Path = Path
 pth.ZipPath = pth.zip = ZipPath

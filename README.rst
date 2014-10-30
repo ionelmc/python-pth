@@ -199,53 +199,36 @@ API
         - ✔
         - Recursively yield files and directories.
     -   - ``os.access(p, const)``
-        - ``p.access(const)``
-        - ✔
         - ✖
         - ✖
-        - ✖
-        - ✖
+        - TODO
     -   - ``os.chdir(d)``
-        - ✖
-        - ``fsd.chdir()``
-        - ``p.cd()``, ``with p.cd:``
+        - ``p.cd()``, ``with p.cd:``, ``with p.cd():``
         - ✖
         - Change current directory.
     -   - ``os.fchdir(fd)``
         - ✖
         - ✖
-        - ✖
-        - ✖
         - Not a path operation.
     -   - ``os.getcwd()``
-        - ``path.getcwd()``
-        - ``FSPath.cwd()``
-        - ✔
-        - ✖
+        - ``pth().abs``, ``pth.cwd``
+        - ―
         - Get current directory.
     -   - ``os.chroot(d)``
-        - ``d.chroot()``
         - ✖
         - ✖
-        - ✖
-        - ✖
+        - TODO
     -   - ``os.chmod(p, 0644)``
         - ``p.chmod(0644)``
-        - ``fsp.chmod(0644)``
-        - ``p.chmod(0644)``
-        - ✔
+        - ✖
         - Change mode (permission bits).
     -   - ``os.chown(p, uid, gid)``
         - ``p.chown(uid, gid)``
-        - ``fsp.chown(uid, gid)``
-        - ?
-        - ?
+        - ✖
         - Change ownership.
     -   - ``os.lchown(p, uid, gid)``
         - ―
         - ―
-        - ?
-        - ?
         -
     -   - ``os.link(src, dst)``
         - ``p.link(dst)``

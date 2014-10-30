@@ -12,7 +12,18 @@ from pytest import raises
 
 import pth
 
+DECENT_PY3 = sys.version_info[:2] >= (3, 3)
 PY2 = sys.version_info[0] == 2
+
+
+def _silly(*args, **kwargs):
+    raise NotImplementedError((args, kwargs))
+
+if not hasattr(os, 'lchmod'):
+    os.lchmod = _silly
+
+if not hasattr(os, 'lchown'):
+    os.lchown = _silly
 
 
 def test_basename():
@@ -416,6 +427,50 @@ def test_chown():
         pth('foobar').chown(123, 123)
 
 
+def test_chmod_nofollow():
+    with Story(['os.lchmod', 'os.chmod']) as story:
+        if DECENT_PY3:
+            os.chmod(pth.Path('foobar'), 0o666, follow_symlinks=False) == None
+        else:
+            os.lchmod(pth.Path('foobar'), 0o666) == None
+
+    with story.replay():
+        pth('foobar').chmod(0o666, follow_symlinks=False)
+
+
+def test_chown_nofollow():
+    with Story(['os.lchown', 'os.chown']) as story:
+        if DECENT_PY3:
+            os.chown(pth.Path('foobar'), 123, 123, follow_symlinks=False) == None
+        else:
+            os.lchown(pth.Path('foobar'), 123, 123) == None
+
+    with story.replay():
+        pth('foobar').chown(123, 123, follow_symlinks=False)
+
+
+def test_lchmod():
+    with Story(['os.lchmod', 'os.chmod']) as story:
+        if DECENT_PY3:
+            os.chmod(pth.Path('foobar'), 0o666, follow_symlinks=False) == None
+        else:
+            os.lchmod(pth.Path('foobar'), 0o666) == None
+
+    with story.replay():
+        pth('foobar').lchmod(0o666)
+
+
+def test_lchown():
+    with Story(['os.lchown', 'os.chown']) as story:
+        if DECENT_PY3:
+            os.chown(pth.Path('foobar'), 123, 123, follow_symlinks=False) == None
+        else:
+            os.lchown(pth.Path('foobar'), 123, 123) == None
+
+    with story.replay():
+        pth('foobar').lchown(123, 123)
+
+
 def test_eq():
     assert 'tests/files/b.txt' == pth('tests/files/b.txt')
 
@@ -467,3 +522,7 @@ def test_list():
         pth('tests', 'files', 'trîcky-năme'),
     ]
     raises(pth.PathMustBeDirectory, next, pth('bogus-doesnt-exist').list)
+
+
+def test_cwd():
+    assert pth().abs == pth.cwd == os.getcwd()
