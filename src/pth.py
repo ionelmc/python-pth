@@ -131,6 +131,13 @@ class Path(AbstractPath):
     real = realpath = property(lambda self: pth(ospath.realpath(self)))
     rel = relpath = lambda self, start: pth(ospath.relpath(self, start))
     same = samefile = lambda self, other: ospath.samefile(self, other)
+
+    if DECENT_PY3:
+        link = lambda self, dest, follow_symlinks=True: os.link(self, dest, follow_symlinks=follow_symlinks)
+    else:
+        link = lambda self, dest: os.link(self, dest)
+    stat = property(lambda self, follow_symlinks=True: os.stat(self) if follow_symlinks else os.lstat(self))
+    lstat = property(lambda self: os.lstat(self))
     #isaccessible = access = lambda self, mode: os.access(self, mode)
     #isexecutable
     #isreadable

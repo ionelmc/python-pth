@@ -222,25 +222,29 @@ API
         - ``p.chmod(0644)``
         - ✖
         - Change mode (permission bits).
+    -   - ``os.lchmod(p, 0644)``
+        - ``p.lchmod(0644)``, ``p.chmod(0644, follow_symlinks=False)``
+        - ✖
+        - Change mode (permission bits) without following symlinks.
     -   - ``os.chown(p, uid, gid)``
         - ``p.chown(uid, gid)``
         - ✖
         - Change ownership.
     -   - ``os.lchown(p, uid, gid)``
-        - ―
-        - ―
-        -
+        - ``p.lchown(uid, gid)``, ``p.chown(uid, gid, follow_symlinks=False)``
+        - ✖
+        - Change ownership without following symlinks.
     -   - ``os.link(src, dst)``
         - ``p.link(dst)``
-        - ``fsp.hardlink(dst)``
-        - ?
-        - ?
+        - ✖
+        - Make hard link.
+    -   - ``os.link(src, dst, follow_symlinks=False)`` (Python>=3.3)
+        - ``p.link(dst, follow_symlinks=False)`` (Python>=3.3 only)
+        - ✖
         - Make hard link.
     -   - ``os.listdir(d)``
-        - ―
-        - ``fsd.listdir(names_only=True)``
-        - ?
-        - ?
+        - ``p.list``
+        - ✔
         - List directory; return base filenames.
     -   - ``os.lstat(p)``
         - ``p.lstat()``

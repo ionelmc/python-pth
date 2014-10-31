@@ -3,6 +3,7 @@
 import os
 import sys
 import zipfile
+import pytest
 
 from fields import Fields
 from fields import Namespace
@@ -526,3 +527,36 @@ def test_list():
 
 def test_cwd():
     assert pth().abs == pth.cwd == os.getcwd()
+
+
+def test_link():
+    with Story(['os.link']) as story:
+        os.link(pth.Path('foo'), 'bar', follow_symlinks=True) == None
+
+    with story.replay():
+        pth('foo').link('bar')
+
+
+@pytest.mark.skipif(not DECENT_PY3, reason="no support for follow_symlinks")
+def test_link_3_3():
+    with Story(['os.link']) as story:
+        os.link(pth.Path('foo'), 'bar', follow_symlinks=False) == None
+
+    with story.replay():
+        pth('foo').link('bar', follow_symlinks=False)
+
+
+def test_stat():
+    with Story(['os.stat']) as story:
+        os.stat(pth.Path('foo')) == "stuff"
+
+    with story.replay():
+        assert pth('foo').stat
+
+
+def test_lstat():
+    with Story(['os.lstat']) as story:
+        os.lstat(pth.Path('foo')) == "stuff"
+
+    with story.replay():
+        assert pth('foo').lstat
