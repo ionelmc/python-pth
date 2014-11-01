@@ -134,11 +134,11 @@ def test_cd_context():
         os.chdir(pth.WorkingDir('/bogus')) == None  # returns
         os.chdir(pth.Path('/current')) == None  # returns
 
-    with story.replay():
+    with story.replay(strict=True):
         with pth('/bogus').cd():
             pass
 
-    with story.replay():
+    with story.replay(strict=True):
         with pth('/bogus').cd:
             pass
 
@@ -340,7 +340,7 @@ def test_cd_call():
         os.chdir(pth.WorkingDir('other')) == None  # returns
 
 
-    with story.replay():
+    with story.replay(strict=True):
         cd = pth('other').cd
         assert cd == 'other'
         assert cd.previous is None
@@ -354,7 +354,7 @@ def test_cd_context_manager():
         os.chdir(pth.WorkingDir('other')) == None  # returns
         os.chdir(pth.Path('/foobar')) == None  # returns
 
-    with story.replay():
+    with story.replay(strict=True):
         with pth('other').cd as wd:
             assert wd == 'other'
             assert wd.previous == '/foobar'
@@ -367,7 +367,7 @@ def test_cd_context_manager_call():
         os.chdir(pth.WorkingDir('other')) == None  # returns
         os.chdir(pth.Path('/foobar')) == None  # returns
 
-    with story.replay():
+    with story.replay(strict=True):
         with pth('other').cd() as wd:
             assert wd == 'other'
             assert wd.previous == '/foobar'
@@ -380,7 +380,7 @@ def test_cd_context_manager_call_call():
         os.chdir(pth.WorkingDir('other')) == None  # returns
         os.chdir(pth.Path('/foobar')) == None  # returns
 
-    with story.replay():
+    with story.replay(strict=True):
         with pth('other').cd() as wd:
             assert wd == 'other'
             assert wd.previous == '/foobar'
@@ -395,7 +395,7 @@ def test_cd_context_manager_call_context_manager():
         os.chdir(pth.WorkingDir('other')) == None  # returns
         os.chdir(pth.Path('/foobar')) == None  # returns
 
-    with story.replay():
+    with story.replay(strict=True):
         with pth('other').cd() as wd:
             assert wd == 'other'
             assert wd.previous == '/foobar'
@@ -407,7 +407,7 @@ def test_cwd():
     with Story(['os.getcwd']) as story:
         os.getcwd() == '/foobar'  # returns
 
-    with story.replay():
+    with story.replay(strict=True):
         assert pth.cwd == '/foobar'
         assert isinstance(pth.cwd, pth.Path)
 
@@ -416,7 +416,7 @@ def test_chmod():
     with Story(['os.chmod']) as story:
         os.chmod(pth.Path('foobar'), 0o666) == None
 
-    with story.replay():
+    with story.replay(strict=True):
         pth('foobar').chmod(0o666)
 
 
@@ -424,7 +424,7 @@ def test_chown():
     with Story(['os.chown']) as story:
         os.chown(pth.Path('foobar'), 123, 123) == None
 
-    with story.replay():
+    with story.replay(strict=True):
         pth('foobar').chown(123, 123)
 
 
@@ -435,7 +435,7 @@ def test_chmod_nofollow():
         else:
             os.lchmod(pth.Path('foobar'), 0o666) == None
 
-    with story.replay():
+    with story.replay(strict=True):
         pth('foobar').chmod(0o666, follow_symlinks=False)
 
 
@@ -446,7 +446,7 @@ def test_chown_nofollow():
         else:
             os.lchown(pth.Path('foobar'), 123, 123) == None
 
-    with story.replay():
+    with story.replay(strict=True):
         pth('foobar').chown(123, 123, follow_symlinks=False)
 
 
@@ -457,7 +457,7 @@ def test_lchmod():
         else:
             os.lchmod(pth.Path('foobar'), 0o666) == None
 
-    with story.replay():
+    with story.replay(strict=True):
         pth('foobar').lchmod(0o666)
 
 
@@ -468,7 +468,7 @@ def test_lchown():
         else:
             os.lchown(pth.Path('foobar'), 123, 123) == None
 
-    with story.replay():
+    with story.replay(strict=True):
         pth('foobar').lchown(123, 123)
 
 
@@ -533,7 +533,7 @@ def test_link():
     with Story(['os.link']) as story:
         os.link(pth.Path('foo'), 'bar', follow_symlinks=True) == None
 
-    with story.replay():
+    with story.replay(strict=True):
         pth('foo').link('bar')
 
 
@@ -542,7 +542,7 @@ def test_link_3_3():
     with Story(['os.link']) as story:
         os.link(pth.Path('foo'), 'bar', follow_symlinks=False) == None
 
-    with story.replay():
+    with story.replay(strict=True):
         pth('foo').link('bar', follow_symlinks=False)
 
 
@@ -550,7 +550,7 @@ def test_stat():
     with Story(['os.stat']) as story:
         os.stat(pth.Path('foo')) == "stuff"
 
-    with story.replay():
+    with story.replay(strict=True):
         assert pth('foo').stat
 
 
@@ -558,5 +558,21 @@ def test_lstat():
     with Story(['os.lstat']) as story:
         os.lstat(pth.Path('foo')) == "stuff"
 
-    with story.replay():
+    with story.replay(strict=True):
         assert pth('foo').lstat
+
+
+def test_mkdir():
+    with Story(['os.mkdir']) as story:
+        os.mkdir(pth.Path('foo')) == None
+
+    with story.replay(strict=True):
+        pth('foo').mkdir()
+
+
+def test_makedirs():
+    with Story(['os.makedirs']) as story:
+        os.makedirs(pth.Path('foo')) == None
+
+    with story.replay(strict=True):
+        pth('foo').makedirs()

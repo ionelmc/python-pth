@@ -138,6 +138,8 @@ class Path(AbstractPath):
         link = lambda self, dest: os.link(self, dest)
     stat = property(lambda self, follow_symlinks=True: os.stat(self) if follow_symlinks else os.lstat(self))
     lstat = property(lambda self: os.lstat(self))
+    mkdir = lambda self: os.mkdir(self)
+    makedirs = lambda self: os.makedirs(self)
     #isaccessible = access = lambda self, mode: os.access(self, mode)
     #isexecutable
     #isreadable
