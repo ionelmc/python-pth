@@ -79,6 +79,7 @@ API
 
 .. list-table::
     :header-rows: 1
+    :widths: 10 10 10 70
 
     -   - ``os``/``os.path``/``shutil``
         - ``pth.Path``
@@ -92,109 +93,149 @@ API
     -   - ``os.access(p, os.R_OK)``
         - ``p.isreadable``
 
-          Python>=3.3::
+            or
 
-            p.isreadable(
-                dir_fd=None,
-                effective_ids=False,
-                follow_symlinks=True
-            )
+          ``p.isreadable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
         - ✖
         - Test read access.
     -   - ``os.access(p, os.W_OK)``
-        - ``p.iswritable`` or
+        - ``p.iswritable``
+
+            or
+
           ``p.iswritable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
         - ✖
         - Test write access.
     -   - ``os.access(p, os.R_OK|os.X_OK)``
-        - ``p.isexecutable`` or
+        - ``p.isexecutable``
+
+            or
+
           ``p.isexecutable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
         - ✖
         - Test execute access.
 
     -   - ``os.chdir(p)``
-        - ``p.cd()`` or ``with p.cd:`` or ``with p.cd():``
+        - ``p.cd()``
+
+            or
+
+          ``with p.cd:``
+
+            or
+
+          ``with p.cd():``
         - ✖
         - Change current directory.
 
-    -   - ``os.chflags(p, flags)`` or
+    -   - ``os.chflags(p, flags)``
         - ``p.chflags(flags)``
         - ✖
         - Change path flags.
 
-    -   - ``os.getcwd()``
-        - ``pth().abs``, ``pth.cwd``
-        - ―
-        - Get current directory.
     -   - ``os.chmod(p, 0644)``
         - ``p.chmod(0644)``
         - ✖
         - Change mode (permission bits).
+
+    -   - ``os.chown(p, uid, gid)``
+        - ``p.chown(uid, gid)``
+        - ✖
+        - Change ownership.
+
     -   - ``os.chroot(p)``
         - ``p.chroot()``
         - ✖
         - Change the root directory of the current process.
 
+    -   - ``os.getcwd()``
+        - ``pth().abs``
+
+            or
+
+          ``pth.cwd``
+        - ―
+        - Get current directory.
+
     -   - ``os.fsencode(p)``
         - ``p.fsencode`` or ``p.fsencoded``
         - ✖
         - Encode path to filesystem encoding.
+
     -   - ``os.fsdecode(p)``
         - ``pth(os.fsdecode(p))``
         - ✖
         - Decode path in filesystem encoding.
+
     -   - ``os.get_exec_path(env=None)``
         - ✖
         - ✖
         - Returns the list of paths from $PATH.
-    -   - ``os.open(path, ...)``
-        - ✖
-        - ✖
-        - Low-level file open (returns fd).
 
-..
+    -   - ``os.lchflags(p, flags)``
+        - ``p.lchflags(flags)``
+
+            or
+
+          ``p.chflags(flags, follow_symlinks=False)``
+        - ✖
+        - Change path flags.
 
     -   - ``os.lchmod(p, 0644)``
         - ``p.lchmod(0644)``, ``p.chmod(0644, follow_symlinks=False)``
         - ✖
         - Change mode (permission bits) without following symlinks.
-    -   - ``os.chown(p, uid, gid)``
-        - ``p.chown(uid, gid)``
-        - ✖
-        - Change ownership.
     -   - ``os.lchown(p, uid, gid)``
         - ``p.lchown(uid, gid)``, ``p.chown(uid, gid, follow_symlinks=False)``
         - ✖
         - Change ownership without following symlinks.
+
     -   - ``os.link(src, dst)``
         - ``p.link(dst)``
         - ✖
         - Make hard link.
+
     -   - ``os.link(src, dst, follow_symlinks=False)`` (Python>=3.3)
         - ``p.link(dst, follow_symlinks=False)`` (Python>=3.3 only)
         - ✖
         - Make hard link.
+
     -   - ``os.listdir(d)``
         - ``p.list``
         - ✔
         - List directory; return base filenames.
+
     -   - ``os.lstat(p)``
         - ``p.lstat()``
         - ✖
         - Like stat but don't follow symbolic link.
+
     -   - ``os.mkdir(d, 0777)``
         - ``d.mkdir(0777)``
         - ✖
         - Create directory.
+
     -   - ``os.makedirs(d, 0777)``
         - ``d.makedirs(0777)``
         - ✖
         - Create a directory and necessary parent directories.
+
+    -   - ``os.mkfifo(path, mode=0o666, dir_fd=None)``
+        - ``d.mkfifo(mode=0o666, dir_fd=None)``
+        - ✖
+        - Create a FIFO (a named pipe).
+
+    -   - ``os.open(path, ...)``
+        - ✖
+        - ✖
+        - Low-level file open (returns fd).
+
     -   - ``os.pathconf(p, name)``
         - ``p.pathconf(name)``
         - ✖
         - Return Posix path attribute.
-    -   - ``os.readlink(p)``
+
+..  -   - ``os.readlink(p)``
         - ``p.readlink``
         - ✖
         - Return the path a symbolic link points to.

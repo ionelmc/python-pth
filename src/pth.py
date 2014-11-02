@@ -179,6 +179,9 @@ class Path(AbstractPath):
         isexecutable = property(lambda self: os.access(self, os.R_OK | os.X_OK))
     if hasattr(os, 'chroot'):
         chroot = lambda self: os.chroot(self)
+    if hasattr(os, 'chflags'):
+        chflags = lambda self, flags, follow_symlinks=True: os.chflags(self, flags) if follow_symlinks else os.lchflags(self, flags)
+        lchflags = lambda self, flags: os.lchflags(self, flags)
 
     @property
     def splitdrive(self):

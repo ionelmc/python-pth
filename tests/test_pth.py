@@ -6,6 +6,7 @@ import zipfile
 import pytest
 import io
 import errno
+import stat
 
 from fields import Fields
 from fields import Namespace
@@ -17,16 +18,6 @@ import pth
 
 DECENT_PY3 = sys.version_info[:2] >= (3, 3)
 PY2 = sys.version_info[0] == 2
-
-
-def _silly(*args, **kwargs):
-    raise NotImplementedError((args, kwargs))
-
-if not hasattr(os, 'lchmod'):
-    os.lchmod = _silly
-
-if not hasattr(os, 'lchown'):
-    os.lchown = _silly
 
 
 def test_basename():
@@ -672,3 +663,26 @@ def test_isexecutable_kwargs():
 
     with story.replay(strict=True):
         assert pth('foo').isexecutable(follow_symlinks=True)
+
+
+def test_chflags_kwargs():
+    with Story(['os.lchflags']) as story:
+        os.lchflags(pth.Path('foo'), stat.UF_NODUMP) == None
+
+    with story.replay(strict=True):
+        pth('foo').chflags(stat.UF_NODUMP, follow_symlinks=True)
+
+def test_chflags():
+    with Story(['os.chflags']) as story:
+        os.chflags(pth.Path('foo'), stat.UF_NODUMP) == None
+
+    with story.replay(strict=True):
+        pth('foo').chflags(stat.UF_NODUMP)
+
+
+def test_lchflags():
+    with Story(['os.chflags']) as story:
+        os.lchflags(pth.Path('foo'), stat.UF_NODUMP) == None
+
+    with story.replay(strict=True):
+        pth('foo').lchflags(stat.UF_NODUMP)
