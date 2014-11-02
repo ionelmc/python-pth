@@ -78,15 +78,63 @@ API
 ---
 
 .. list-table::
+    :header-rows: 1
 
     -   - ``os``/``os.path``/``shutil``
         - ``pth.Path``
         - ``pth.ZipPath`` support?
         - Notes
+
+    -   - ``os.access(p, mode)``
+        - ``p.access(mode)``
+        - ✖
+        - Test access with given mode.
+    -   - ``os.access(p, os.R_OK)``
+        - ``p.isreadable``
+
+          Python>=3.3::
+
+            p.isreadable(
+                dir_fd=None,
+                effective_ids=False,
+                follow_symlinks=True
+            )
+        - ✖
+        - Test read access.
+    -   - ``os.access(p, os.W_OK)``
+        - ``p.iswritable`` or
+          ``p.iswritable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
+        - ✖
+        - Test write access.
+    -   - ``os.access(p, os.R_OK|os.X_OK)``
+        - ``p.isexecutable`` or
+          ``p.isexecutable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
+        - ✖
+        - Test execute access.
+
     -   - ``os.chdir(p)``
         - ``p.cd()`` or ``with p.cd:`` or ``with p.cd():``
         - ✖
         - Change current directory.
+
+    -   - ``os.chflags(p, flags)`` or
+        - ``p.chflags(flags)``
+        - ✖
+        - Change path flags.
+
+    -   - ``os.getcwd()``
+        - ``pth().abs``, ``pth.cwd``
+        - ―
+        - Get current directory.
+    -   - ``os.chmod(p, 0644)``
+        - ``p.chmod(0644)``
+        - ✖
+        - Change mode (permission bits).
+    -   - ``os.chroot(p)``
+        - ``p.chroot()``
+        - ✖
+        - Change the root directory of the current process.
+
     -   - ``os.fsencode(p)``
         - ``p.fsencode`` or ``p.fsencoded``
         - ✖
@@ -103,37 +151,6 @@ API
         - ✖
         - ✖
         - Low-level file open (returns fd).
-    -   - ``os.access(p, mode)``
-        - ``p.access(mode)``
-        - ✖
-        - Test access with given mode.
-    -   - ``os.access(p, os.R_OK)``
-        - ``p.isreadable`` or
-          ``p.isreadable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
-        - ✖
-        - Test read access.
-    -   - ``os.access(p, os.W_OK)``
-        - ``p.iswritable`` or
-          ``p.iswritable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
-        - ✖
-        - Test write access.
-    -   - ``os.access(p, os.R_OK|os.X_OK)``
-        - ``p.isexecutable`` or
-          ``p.isexecutable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
-        - ✖
-        - Test execute access.
-    -   - ``os.getcwd()``
-        - ``pth().abs``, ``pth.cwd``
-        - ―
-        - Get current directory.
-    -   - ``os.chmod(p, 0644)``
-        - ``p.chmod(0644)``
-        - ✖
-        - Change mode (permission bits).
-    -   - ``os.chroot(p)``
-        - ``p.chroot()``
-        - ✖
-        - Change the root directory of the current process.
 
 ..
 
