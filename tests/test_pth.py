@@ -4,6 +4,8 @@ import os
 import sys
 import zipfile
 import pytest
+import io
+import errno
 
 from fields import Fields
 from fields import Namespace
@@ -576,3 +578,97 @@ def test_makedirs():
 
     with story.replay(strict=True):
         pth('foo').makedirs()
+
+
+def test_pathconf():
+    with Story(['os.pathconf']) as story:
+        os.pathconf(pth.Path('foo'), 'bar') == 'whatev'
+
+    with story.replay(strict=True):
+        assert pth('foo').pathconf('bar') == 'whatev'
+
+
+def test_fsencode():
+    assert pth('foo').fsencode == pth('foo').fsencoded == b'foo'
+
+
+def test_chroot():
+    with Story(['os.chroot']) as story:
+        os.chroot(pth.Path('foo')) == None
+
+    with story.replay(strict=True):
+        pth('foo').chroot()
+
+
+def test_open():
+    with Story(['io.open', 'os.path.isdir']) as story:
+        os.path.isdir(pth.Path('foo')) == False
+        io.open(pth.Path('foo'), 'rb') == None
+
+    with story.replay(strict=True):
+        pth('foo')('rb')
+
+
+def test_open_missing():
+    with Story(['io.open', 'os.path.isdir']) as story:
+        os.path.isdir(pth.Path('foo')) == False
+        io.open(pth.Path('foo'), 'rb') ** IOError(errno.ENOENT, "Whatev")
+
+    with story.replay(strict=True):
+        raises(pth.PathMustBeFile, lambda: pth('foo')('rb'))
+
+
+def test_access():
+    with Story(['os.access']) as story:
+        os.access(pth.Path('foo'), os.R_OK) == True
+
+    with story.replay(strict=True):
+        assert pth('foo').access(os.R_OK)
+
+
+def test_isreadable():
+    with Story(['os.access']) as story:
+        os.access(pth.Path('foo'), os.R_OK) == True
+
+    with story.replay(strict=True):
+        assert pth('foo').isreadable
+
+
+def test_isreadable_kwargs():
+    with Story(['os.access']) as story:
+        os.access(pth.Path('foo'), os.R_OK, follow_symlinks=True) == True
+
+    with story.replay(strict=True):
+        assert pth('foo').isreadable(follow_symlinks=True)
+
+
+def test_iswritable():
+    with Story(['os.access']) as story:
+        os.access(pth.Path('foo'), os.W_OK) == True
+
+    with story.replay(strict=True):
+        assert pth('foo').iswritable
+
+
+def test_iswritable_kwargs():
+    with Story(['os.access']) as story:
+        os.access(pth.Path('foo'), os.W_OK, follow_symlinks=True) == True
+
+    with story.replay(strict=True):
+        assert pth('foo').iswritable(follow_symlinks=True)
+
+
+def test_isexecutable():
+    with Story(['os.access']) as story:
+        os.access(pth.Path('foo'), os.W_OK) == True
+
+    with story.replay(strict=True):
+        assert pth('foo').isexecutable
+
+
+def test_isexecutable_kwargs():
+    with Story(['os.access']) as story:
+        os.access(pth.Path('foo'), os.W_OK, follow_symlinks=True) == True
+
+    with story.replay(strict=True):
+        assert pth('foo').isexecutable(follow_symlinks=True)

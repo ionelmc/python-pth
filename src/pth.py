@@ -8,13 +8,15 @@ import sys
 import tempfile
 import time
 import zipfile
+import io
 from os import path as ospath
 
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
-DECENT_PY3 = sys.version_info[:2] >= (3, 3)
-
+PY32 = sys.version_info[:2] >= (3, 2)
+PY33 = sys.version_info[:2] >= (3, 3)
+HAS_FSDECODE = hasattr(os, 'fsdecode')
 
 if PY2:
     def exec_(_code_, _globs_=None, _locs_=None):
@@ -60,7 +62,11 @@ class PTH(object):
         return pth(os.getcwd())
 
     def __call__(self, *parts):
-        path = ospath.join(*parts) if parts else ospath.curdir
+        if parts:
+            path = ospath.join(*parts)
+        else:
+            path = ospath.curdir
+
         if zipfile.is_zipfile(path):
             return ZipPath(Path(path), zipfile.ZipFile(path))
         else:
@@ -110,6 +116,22 @@ class AbstractPath(string):
         return [pth(part or ospath.sep) for part in self.split(ospath.sep)]
 
 
+class LazyResult(object):
+    def __init__(self, func):
+        self.func = func
+        self.result = None
+        self.called = False
+
+    def __nonzero__(self):
+        if not self.called:
+            self.result = self.func()
+            self.called = True
+        return self.result
+
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
+
+
 class Path(AbstractPath):
     abs = abspath = property(lambda self: pth(ospath.abspath(self)))
     exists = property(lambda self: ospath.exists(self))
@@ -131,19 +153,32 @@ class Path(AbstractPath):
     real = realpath = property(lambda self: pth(ospath.realpath(self)))
     rel = relpath = lambda self, start: pth(ospath.relpath(self, start))
     same = samefile = lambda self, other: ospath.samefile(self, other)
-
-    if DECENT_PY3:
-        link = lambda self, dest, follow_symlinks=True: os.link(self, dest, follow_symlinks=follow_symlinks)
-    else:
-        link = lambda self, dest: os.link(self, dest)
+    if hasattr(os, 'link'):
+        if PY33:
+            link = lambda self, dest, follow_symlinks=True: os.link(self, dest, follow_symlinks=follow_symlinks)
+        else:
+            link = lambda self, dest: os.link(self, dest)
     stat = property(lambda self, follow_symlinks=True: os.stat(self) if follow_symlinks else os.lstat(self))
     lstat = property(lambda self: os.lstat(self))
     mkdir = lambda self: os.mkdir(self)
     makedirs = lambda self: os.makedirs(self)
-    #isaccessible = access = lambda self, mode: os.access(self, mode)
-    #isexecutable
-    #isreadable
-    #iswritable
+    if hasattr(os, 'pathconf'):
+        pathconf = lambda self, name: os.pathconf(self, name)
+    if hasattr(os, 'readlink'):
+        readlink = property(lambda self: os.readlink(self))
+    if hasattr(os, 'fsencode'):
+        fsencode = fsencoded = property(lambda self: os.fsencode(self))
+    access = lambda self, mode, **kwargs: os.access(self, mode, **kwargs)
+    if PY33:
+        isreadable = property(lambda self: LazyResult(lambda **kwargs: os.access(self, os.R_OK, **kwargs)))
+        iswritable = property(lambda self: LazyResult(lambda **kwargs: os.access(self, os.W_OK, **kwargs)))
+        isexecutable = property(lambda self: LazyResult(lambda **kwargs: os.access(self, os.R_OK | os.X_OK, **kwargs)))
+    else:
+        isreadable = property(lambda self: os.access(self, os.R_OK))
+        iswritable = property(lambda self: os.access(self, os.W_OK))
+        isexecutable = property(lambda self: os.access(self, os.R_OK | os.X_OK))
+    if hasattr(os, 'chroot'):
+        chroot = lambda self: os.chroot(self)
 
     @property
     def splitdrive(self):
@@ -161,7 +196,7 @@ class Path(AbstractPath):
         if follow_symlinks:
             return os.chmod(self, mode)
         else:
-            if DECENT_PY3:
+            if PY33:
                 os.chmod(self, mode, follow_symlinks=follow_symlinks)
             else:
                 os.lchmod(self, mode)
@@ -170,7 +205,7 @@ class Path(AbstractPath):
         if follow_symlinks:
             os.chown(self, uid, gid)
         else:
-            if DECENT_PY3:
+            if PY33:
                 os.chown(self, uid, gid, follow_symlinks=follow_symlinks)
             else:
                 os.lchown(self, uid, gid)
@@ -197,7 +232,7 @@ class Path(AbstractPath):
     def __call__(self, *open_args, **open_kwargs):
         if not self.isdir:
             try:
-                return open(self, *open_args, **open_kwargs)
+                return io.open(self, *open_args, **open_kwargs)
             except IOError as exc:
                 if exc.errno == errno.ENOENT:
                     raise_(PathMustBeFile, exc)

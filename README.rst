@@ -24,26 +24,36 @@
 
 **Note:** This is in very alpha state.
 
-Simple and brief path traversal and filesystem access library. This library is a bit different that other path manipulation libraries:
+Simple and brief path traversal and filesystem access library. This library is a bit different that other path
+manipulation libraries - the principles of this library:
 
 * Path are subclasses of strings. You can use them anyhere you would use a string.
-* Almost everything from ``os.path`` is available as a **property** with the same name except:
+* All the function that works with paths from ``os`` / ``os.path`` / ``shutil`` should be available.
+* Transparent support for files in .zip files (with limited functionality).
+* Readonly functions are available as properties **property**. If the function would have side-effects (``chdir``,
+  ``chroot`` etc) then it will be a method.
+* Original names of the functions are kept. [1]_
+* Shorthands and brief aliases. Example:
 
-  * ``os.path.relpath`` is a **method**
   * ``os.path.getsize`` becomes a **property** named ``size``
   * ``os.path.getatime`` becomes a **property** named ``atime``
   * ``os.path.getctime`` becomes a **property** named ``ctime``
   * ``os.path.getmtime`` becomes a **property** named ``mtime``
-  * ``os.path.split`` becomes a **method** name ``splitpath`` as ``split`` is already a string method
-  * ``os.path.join`` becomes a **method** name ``joinpath`` as ``join`` is already a string method
-  * ``os.path.commonprefix`` *is not implemented*
   * ``os.path.basename`` becomes a **property** named ``name``
   * ``os.path.dirname`` becomes a **property** named ``dir``
   * ``os.listdir`` becomes a **property** named ``list``
-  * ``os.walk`` becomes a **property** named ``tree``
 
-* Calling a *Path* object calls ``open()`` on the path. Takes any argument ``open`` would take (except the filename ofcourse).
-* Transparent support for files in .zip files.
+  * Calling a *Path* object calls ``open()`` on the path. Takes any argument ``open`` would take (except the filename
+    ofcourse).
+
+.. [1]
+
+  However there are few exceptions:
+
+  * ``os.walk`` becomes a **property** named ``tree``
+  * ``os.path.split`` becomes a **method** name ``splitpath`` as ``split`` is already a string method
+  * ``os.path.join`` becomes a **method** name ``joinpath`` as ``join`` is already a string method
+
 
 Basically it is designed for extreme brevity. It shares `Unipath <https://pypi.python.org/pypi/Unipath/>`_'s
 str-subclassing approach and and it has seamless zip support (like Twisted's `ZipPath
@@ -73,155 +83,60 @@ API
         - ``pth.Path``
         - ``pth.ZipPath`` support?
         - Notes
-    -   - ``os.path.abspath(p)``
-        - ``p.abs``, ``p.abspath``
-        - ✔
-        - Returns an absolute path.
-    -   - ``os.path.basename(p)``
-        - ``p.name``, ``p.basename``
-        - ✔
-        - The last component.
-    -   - ``os.path.commonprefix(p)``
-        - ✖
-        - ✖
-        - Common prefix.
-    -   - ``os.path.dirname(p)``
-        - ``p.dirname``, ``p.dir``
-        - ✔
-        - All except the last component.
-    -   - ``os.path.exists(p)``
-        - ``p.exists``
-        - ✔
-        - Does the path exist?
-    -   - ``os.path.lexists(p)``
-        - ``p.lexists``
-        - ✖
-        - Does the symbolic link exist?
-    -   - ``os.path.expanduser(p)``
-        - ``p.expanduser``
-        - ✔
-        - Expand "~" and "~user" prefix.
-    -   - ``os.path.expandvars(p)``
-        - ``p.expandvars``
-        - ✔
-        - Expand "$VAR" environment variables.
-    -   - ``os.path.getatime(p)``
-        - ``p.atime``
-        - ✖
-        - Last access time.
-    -   - ``os.path.getmtime(p)``
-        - ``p.mtime``
-        - ✖
-        - Last modify time.
-    -   - ``os.path.getctime(p)``
-        - ``p.ctime``
-        - ✔
-        - Platform-specific "ctime".
-    -   - ``os.path.getsize(p)``
-        - ``p.size``
-        - ✔
-        - File size.
-    -   - ``os.path.isabs(p)``
-        - ``p.isabs``
-        - ✔
-        - Is path absolute?
-    -   - ``os.path.isfile(p)``
-        - ``p.isfile``
-        - ✔
-        - Is a file?
-    -   - ``os.path.isdir(p)``
-        - ``p.isdir``
-        - ✔
-        - Is a directory?
-    -   - ``os.path.islink(p)``
-        - ``p.islink``
-        - ✔
-        - Is a symbolic link?
-    -   - ``os.path.ismount(p)``
-        - ``p.ismount``
-        - ✔
-        - Is a mount point?
-    -   - ``os.path.join(p, "Q/R")``
-        - ``p / "Q/R"``, ``p.joinpath("Q/R")``
-        - ✔
-        - Join paths.
-    -   - ``os.path.normcase(p)``
-        - ``p.normcase``
-        - ✔
-        - Normalize case.
-    -   - ``os.path.normpath(p)``
-        - ``p.normpath``
-        - ✔
-        - Normalize path.
-    -   - ``os.path.normcase(os.path.normpath(p))``
-        - ``p.norm``
-        - ✔
-        - Normalize case and path.
-    -   - ``os.path.realpath(p)``
-        - ``p.real``
-        - ✔
-        - Real path without symbolic links.
-    -   - ``os.path.samefile(p, q)``
-        - ``p.same(q)``
-        - ✔
-        - True if both paths point to the same filesystem item.
-    -   - ``os.path.sameopenfile(d1, d2)``
-        - ✖
-        - ✖
-        -
-    -   - ``os.path.samestat(st1, st2)``
-        - ✖
-        - ✖
-        -
-    -   - ``os.path.split(p)``
-        - ``(p.parent, p.name)``, ``p.splitpath``, ``p.pathsplit``
-        - ✔
-        - Split path at basename.
-    -   - ``os.path.splitdrive(p)``
-        - ``p.splitdrive``, ``p.drivesplit``
-        - ✔
-        -
-    -   - ``os.path.splitext(p)``
-        - ``p.splitext``, ``p.extsplit``
-        - ✔
-        - ✔
-        -
-    -   - ``os.path.splitunc(p)``
-        - ✖
-        - ✖
-        -
-    -   - ``os.path.walk(p, func, args)``
-        - ✖
-        - ✖
-        - It's deprecated in Python 3 anyway
-    -   - ``os.walk(p)``
-        - ``p.tree``
-        - ✔
-        - Recursively yield files and directories.
-    -   - ``os.access(p, const)``
-        - ✖
-        - ✖
-        - TODO
-    -   - ``os.chdir(d)``
-        - ``p.cd()``, ``with p.cd:``, ``with p.cd():``
+    -   - ``os.chdir(p)``
+        - ``p.cd()`` or ``with p.cd:`` or ``with p.cd():``
         - ✖
         - Change current directory.
-    -   - ``os.fchdir(fd)``
+    -   - ``os.fsencode(p)``
+        - ``p.fsencode`` or ``p.fsencoded``
+        - ✖
+        - Encode path to filesystem encoding.
+    -   - ``os.fsdecode(p)``
+        - ``pth(os.fsdecode(p))``
+        - ✖
+        - Decode path in filesystem encoding.
+    -   - ``os.get_exec_path(env=None)``
         - ✖
         - ✖
-        - Not a path operation.
+        - Returns the list of paths from $PATH.
+    -   - ``os.open(path, ...)``
+        - ✖
+        - ✖
+        - Low-level file open (returns fd).
+    -   - ``os.access(p, mode)``
+        - ``p.access(mode)``
+        - ✖
+        - Test access with given mode.
+    -   - ``os.access(p, os.R_OK)``
+        - ``p.isreadable`` or
+          ``p.isreadable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
+        - ✖
+        - Test read access.
+    -   - ``os.access(p, os.W_OK)``
+        - ``p.iswritable`` or
+          ``p.iswritable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
+        - ✖
+        - Test write access.
+    -   - ``os.access(p, os.R_OK|os.X_OK)``
+        - ``p.isexecutable`` or
+          ``p.isexecutable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
+        - ✖
+        - Test execute access.
     -   - ``os.getcwd()``
         - ``pth().abs``, ``pth.cwd``
         - ―
         - Get current directory.
-    -   - ``os.chroot(d)``
-        - ✖
-        - ✖
-        - TODO
     -   - ``os.chmod(p, 0644)``
         - ``p.chmod(0644)``
         - ✖
         - Change mode (permission bits).
+    -   - ``os.chroot(p)``
+        - ``p.chroot()``
+        - ✖
+        - Change the root directory of the current process.
+
+..
+
     -   - ``os.lchmod(p, 0644)``
         - ``p.lchmod(0644)``, ``p.chmod(0644, follow_symlinks=False)``
         - ✖
@@ -260,15 +175,11 @@ API
         - Create a directory and necessary parent directories.
     -   - ``os.pathconf(p, name)``
         - ``p.pathconf(name)``
-        - ―
-        - ?
-        - ?
-        - Return Posix path attribute.  (What the hell is this?)
-    -   - ``os.readlink(l)``
-        - ``l.readlink()``
-        - ``fsl.read_link()``
-        - ?
-        - ?
+        - ✖
+        - Return Posix path attribute.
+    -   - ``os.readlink(p)``
+        - ``p.readlink``
+        - ✖
         - Return the path a symbolic link points to.
     -   - ``os.remove(f)``
         - ``f.remove()``
@@ -330,6 +241,15 @@ API
         - ?
         - ?
         - Same as .remove().
+
+
+    -   - ``os.walk(p)``
+        - ``p.tree``
+        - ✔
+        - Recursively yield files and directories.
+
+
+
     -   - ``os.utime(p, times)``
         - ``p.utime(times)``
         - ``fsp.set_times(mtime, atime)``
@@ -1127,3 +1047,126 @@ And there's a *temporary path*::
 
     >>> t.exists
     False
+
+
+    -   - ``os.path.abspath(p)``
+        - ``p.abs``, ``p.abspath``
+        - ✔
+        - Returns an absolute path.
+    -   - ``os.path.basename(p)``
+        - ``p.name``, ``p.basename``
+        - ✔
+        - The last component.
+    -   - ``os.path.commonprefix(p)``
+        - ✖
+        - ✖
+        - Common prefix.
+    -   - ``os.path.dirname(p)``
+        - ``p.dirname``, ``p.dir``
+        - ✔
+        - All except the last component.
+    -   - ``os.path.exists(p)``
+        - ``p.exists``
+        - ✔
+        - Does the path exist?
+    -   - ``os.path.lexists(p)``
+        - ``p.lexists``
+        - ✖
+        - Does the symbolic link exist?
+    -   - ``os.path.expanduser(p)``
+        - ``p.expanduser``
+        - ✔
+        - Expand "~" and "~user" prefix.
+    -   - ``os.path.expandvars(p)``
+        - ``p.expandvars``
+        - ✔
+        - Expand "$VAR" environment variables.
+    -   - ``os.path.getatime(p)``
+        - ``p.atime``
+        - ✖
+        - Last access time.
+    -   - ``os.path.getmtime(p)``
+        - ``p.mtime``
+        - ✖
+        - Last modify time.
+    -   - ``os.path.getctime(p)``
+        - ``p.ctime``
+        - ✔
+        - Platform-specific "ctime".
+    -   - ``os.path.getsize(p)``
+        - ``p.size``
+        - ✔
+        - File size.
+    -   - ``os.path.isabs(p)``
+        - ``p.isabs``
+        - ✔
+        - Is path absolute?
+    -   - ``os.path.isfile(p)``
+        - ``p.isfile``
+        - ✔
+        - Is a file?
+    -   - ``os.path.isdir(p)``
+        - ``p.isdir``
+        - ✔
+        - Is a directory?
+    -   - ``os.path.islink(p)``
+        - ``p.islink``
+        - ✔
+        - Is a symbolic link?
+    -   - ``os.path.ismount(p)``
+        - ``p.ismount``
+        - ✔
+        - Is a mount point?
+    -   - ``os.path.join(p, "Q/R")``
+        - ``p / "Q/R"``, ``p.joinpath("Q/R")``
+        - ✔
+        - Join paths.
+    -   - ``os.path.normcase(p)``
+        - ``p.normcase``
+        - ✔
+        - Normalize case.
+    -   - ``os.path.normpath(p)``
+        - ``p.normpath``
+        - ✔
+        - Normalize path.
+    -   - ``os.path.normcase(os.path.normpath(p))``
+        - ``p.norm``
+        - ✔
+        - Normalize case and path.
+    -   - ``os.path.realpath(p)``
+        - ``p.real``
+        - ✔
+        - Real path without symbolic links.
+    -   - ``os.path.samefile(p, q)``
+        - ``p.same(q)``
+        - ✔
+        - True if both paths point to the same filesystem item.
+    -   - ``os.path.sameopenfile(d1, d2)``
+        - ✖
+        - ✖
+        -
+    -   - ``os.path.samestat(st1, st2)``
+        - ✖
+        - ✖
+        -
+    -   - ``os.path.split(p)``
+        - ``(p.parent, p.name)``, ``p.splitpath``, ``p.pathsplit``
+        - ✔
+        - Split path at basename.
+    -   - ``os.path.splitdrive(p)``
+        - ``p.splitdrive``, ``p.drivesplit``
+        - ✔
+        -
+    -   - ``os.path.splitext(p)``
+        - ``p.splitext``, ``p.extsplit``
+        - ✔
+        - ✔
+        -
+    -   - ``os.path.splitunc(p)``
+        - ✖
+        - ✖
+        -
+    -   - ``os.path.walk(p, func, args)``
+        - ✖
+        - ✖
+        - It's deprecated in Python 3 anyway
