@@ -3,18 +3,18 @@
 import os
 import sys
 import zipfile
-import pytest
 import io
 import errno
 import stat
 
-from fields import Fields
+import pytest
 from fields import Namespace
 from aspectlib.test import Story
 from pytest import mark
 from pytest import raises
 
 import pth
+
 
 DECENT_PY3 = sys.version_info[:2] >= (3, 3)
 PY2 = sys.version_info[0] == 2
@@ -667,7 +667,7 @@ def test_iswritable_kwargs():
 
 def test_isexecutable():
     with Story(['os.access']) as story:
-        os.access(pth.Path('foo'), os.W_OK) == True
+        os.access(pth.Path('foo'), os.R_OK | os.X_OK) == True
 
     with story.replay(strict=True):
         assert pth('foo').isexecutable
@@ -675,7 +675,7 @@ def test_isexecutable():
 
 def test_isexecutable_kwargs():
     with Story(['os.access']) as story:
-        os.access(pth.Path('foo'), os.W_OK, follow_symlinks=True) == True
+        os.access(pth.Path('foo'), os.R_OK | os.X_OK, follow_symlinks=True) == True
 
     with story.replay(strict=True):
         assert pth('foo').isexecutable(follow_symlinks=True)
