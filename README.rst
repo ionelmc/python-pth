@@ -293,11 +293,13 @@ API
 
           or
 
-          ``p.joinpath("foobar")``
+          ``p.joinpath(
+          "foobar")``
 
           or
 
-          ``p.pathjoin("foobar")``
+          ``p.pathjoin(
+          "foobar")``
         - ✔
         - Join paths.
     +   - ``os.path.normcase(p)``
@@ -308,7 +310,8 @@ API
         - ``p.normpath``
         - ✔
         - Normalize path.
-    +   - ``os.path.normcase(os.path.normpath(p))``
+    +   - ``os.path.normcase(
+          os.path.normpath(p))``
         - ``p.norm``
         - ✔
         - Normalize case and path.
