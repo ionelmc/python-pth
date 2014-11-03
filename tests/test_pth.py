@@ -704,6 +704,14 @@ def test_lchflags():
         pth('foo').lchflags(stat.UF_NODUMP)
 
 
+def test_readlink():
+    with Story(['os.readlink']) as story:
+        os.readlink(pth.Path('foo')) == 'bar'
+
+    with story.replay(strict=True):
+        assert pth('foo').readlink == 'bar'
+
+
 def test_proxy():
     calls = []
 
