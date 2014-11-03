@@ -92,35 +92,38 @@ API
     +   - ``os.access(p, os.R_OK)``
         - ``p.isreadable``
 
-            or
+          or
 
-          ``p.isreadable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
+          ``p.isreadable(
+          dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
         - ✖
         - Test read access.
     +   - ``os.access(p, os.W_OK)``
         - ``p.iswritable``
 
-            or
+          or
 
-          ``p.iswritable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
+          ``p.iswritable(
+          dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
         - ✖
         - Test write access.
     +   - ``os.access(p, os.R_OK|os.X_OK)``
         - ``p.isexecutable``
 
-            or
+          or
 
-          ``p.isexecutable(dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
+          ``p.isexecutable(
+          dir_fd=None, effective_ids=False, follow_symlinks=True)`` (Python>=3.3)
         - ✖
         - Test execute access.
     +   - ``os.chdir(p)``
         - ``p.cd()``
 
-            or
+          or
 
           ``with p.cd:``
 
-            or
+          or
 
           ``with p.cd():``
         - ✖
@@ -144,13 +147,17 @@ API
     +   - ``os.getcwd()``
         - ``pth().abs``
 
-            or
+          or
 
           ``pth.cwd``
         - ―
         - Get current directory.
     +   - ``os.fsencode(p)``
-        - ``p.fsencode`` or ``p.fsencoded``
+        - ``p.fsencode``
+
+          or
+
+          ``p.fsencoded``
         - ✖
         - Encode path to filesystem encoding.
     +   - ``os.fsdecode(p)``
@@ -164,7 +171,7 @@ API
     +   - ``os.lchflags(p, flags)``
         - ``p.lchflags(flags)``
 
-            or
+          or
 
           ``p.chflags(flags, follow_symlinks=False)``
         - ✖
@@ -284,11 +291,11 @@ API
     +   - ``os.path.join(p, "foobar")``
         - ``p / "foobar"``
 
-            or
+          or
 
           ``p.joinpath("foobar")``
 
-            or
+          or
 
           ``p.pathjoin("foobar")``
         - ✔
@@ -308,7 +315,7 @@ API
     +   - ``os.path.relpath(p, q)``
         - ``p.rel(q)``
 
-            or
+          or
 
           ``p.relpath(q)``
         - ✔
@@ -316,7 +323,7 @@ API
     +   - ``os.path.realpath(p)``
         - ``p.real``
 
-            or
+          or
 
           ``p.realpath``
         - ✔
@@ -324,7 +331,7 @@ API
     +   - ``os.path.samefile(p, q)``
         - ``p.same(q)``
 
-            or
+          or
 
           ``p.samefile(q)``
         - ✔
@@ -332,11 +339,11 @@ API
     +   - ``os.path.split(p)``
         - ``(p.parent, p.name)``
 
-            or
+          or
 
           ``p.splitpath``
 
-            or
+          or
 
           ``p.pathsplit``
         - ✔
@@ -344,7 +351,7 @@ API
     +   - ``os.path.splitdrive(p)``
         - ``p.splitdrive``
 
-            or
+          or
 
           ``p.drivesplit``
         - ✔
@@ -352,7 +359,7 @@ API
     +   - ``os.path.splitext(p)``
         - ``p.splitext``
 
-            or
+          or
 
           ``p.extsplit``
         - ✔
