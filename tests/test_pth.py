@@ -555,6 +555,22 @@ def test_lstat():
         assert pth('foo').lstat
 
 
+def test_stat_kwargs():
+    with Story(['os.stat']) as story:
+        os.stat(pth.Path('foo'), dir_fd=123) == "stuff"
+
+    with story.replay(strict=True):
+        assert pth('foo').stat(dir_fd=123)
+
+
+def test_lstat_kwargs():
+    with Story(['os.lstat']) as story:
+        os.lstat(pth.Path('foo'), dir_fd=123) == "stuff"
+
+    with story.replay(strict=True):
+        assert pth('foo').lstat(dir_fd=123)
+
+
 def test_mkdir():
     with Story(['os.mkdir']) as story:
         os.mkdir(pth.Path('foo')) == None
@@ -686,3 +702,13 @@ def test_lchflags():
 
     with story.replay(strict=True):
         pth('foo').lchflags(stat.UF_NODUMP)
+
+
+def test_proxy():
+    calls = []
+
+    obj = pth.__mod.LazyObjectProxy(lambda *args, **kwargs: calls.append((args, kwargs)) or pth)
+    obj.cwd
+    obj.cwd
+    obj.cwd
+    assert len(calls) == 1

@@ -16,7 +16,6 @@ PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 PY32 = sys.version_info[:2] >= (3, 2)
 PY33 = sys.version_info[:2] >= (3, 3)
-HAS_FSDECODE = hasattr(os, 'fsdecode')
 
 if PY2:
     def exec_(_code_, _globs_=None, _locs_=None):
@@ -37,7 +36,6 @@ if PY2:
 else:
     def raise_(tp, value):
         raise tp(value)
-
 
 class PathError(Exception):
     pass
@@ -116,20 +114,106 @@ class AbstractPath(string):
         return [pth(part or ospath.sep) for part in self.split(ospath.sep)]
 
 
-class LazyResult(object):
-    def __init__(self, func):
-        self.func = func
-        self.result = None
-        self.called = False
+class cached_property(object):
+    """ A property that is only computed once per instance and then replaces
+        itself with an ordinary attribute. Deleting the attribute resets the
+        property.
 
-    def __nonzero__(self):
-        if not self.called:
-            self.result = self.func()
-            self.called = True
-        return self.result
+        Source: https://github.com/bottlepy/bottle/commit/fa7733e075da0d790d809aa3d2f53071897e6f76
+        """
+
+    def __init__(self, func):
+        self.__doc__ = getattr(func, '__doc__')
+        self.func = func
+
+    def __get__(self, obj, cls):
+        if obj is None:
+            return self
+        value = obj.__dict__[self.func.__name__] = self.func(obj)
+        return value
+
+
+class LazyObjectProxy(object):
+    __lop_factory__ = None
+
+    def __init__(self, factory):
+        super(LazyObjectProxy, self).__setattr__('__lop_factory__', factory)
+
+    @cached_property
+    def __lop_subject__(self):
+        return self.__lop_factory__()
 
     def __call__(self, *args, **kwargs):
-        return self.func(*args, **kwargs)
+        return self.__lop_factory__(*args, **kwargs)
+
+    def __getitem__(self, arg):
+        return self.__lop_subject__[arg]
+
+    def __setitem__(self, arg, val):
+        self.__lop_subject__[arg] = val
+
+    def __delitem__(self, arg):
+        del self.__lop_subject__[arg]
+
+    def __getslice__(self, i, j):
+        return self.__lop_subject__[i:j]
+
+    def __setslice__(self, i, j, val):
+        self.__lop_subject__[i:j] = val
+
+    def __delslice__(self, i, j):
+        del self.__lop_subject__[i:j]
+
+    def __contains__(self, ob):
+        return ob in self.__lop_subject__
+
+    for name in 'setattr delattr getattr bool repr str hash len abs complex int long float iter cmp coerce divmod'.split():
+        exec("def __%s__(self, *args): return %s(self.__lop_subject__, *args)" % (name, name))
+
+    for name, op in [
+        ('lt', '<'), ('gt', '>'), ('le', '<='), ('ge', '>='),
+        ('eq', ' == '), ('ne', '!=')
+    ]:
+        exec("def __%s__(self, ob): return self.__lop_subject__ %s ob" % (name, op))
+
+    for name, op in [('neg', '-'), ('pos', '+'), ('invert', '~')]:
+        exec("def __%s__(self): return %s self.__lop_subject__" % (name, op))
+
+    for name, op in [
+        ('or', '|'),  ('and', '&'), ('xor', '^'), ('lshift', '<<'), ('rshift', '>>'),
+        ('add', '+'), ('sub', '-'), ('mul', '*'), ('div', '/'), ('mod', '%'),
+        ('truediv', '/'), ('floordiv', '//')
+    ]:
+        exec((
+            "def __%(name)s__(self, ob):\n"
+            "    return self.__lop_subject__ %(op)s ob\n"
+            "\n"
+            "def __r%(name)s__(self, ob):\n"
+            "    return ob %(op)s self.__lop_subject__\n"
+            "\n"
+            "def __i%(name)s__(self, ob):\n"
+            "    self.__lop_subject__ %(op)s=ob\n"
+            "    return self\n"
+        ) % locals())
+
+    del name, op
+
+    # Oddball signatures
+    def __index__(self):
+        return self.__lop_subject__.__index__()
+
+    def __rdivmod__(self, ob):
+        return divmod(ob, self.__lop_subject__)
+
+    def __pow__(self, *args):
+        return pow(self.__lop_subject__, *args)
+
+    def __ipow__(self, ob):
+        self.__lop_subject__ **= ob
+        return self
+
+    def __rpow__(self, ob):
+        return pow(ob, self.__lop_subject__)
 
 
 class Path(AbstractPath):
@@ -146,7 +230,7 @@ class Path(AbstractPath):
     isfile = property(lambda self: ospath.isfile(self))
     islink = property(lambda self: ospath.islink(self))
     ismount = property(lambda self: ospath.ismount(self))
-    joinpath = __div__ = __floordiv__ = __truediv__ = lambda self, *args: pth(ospath.join(self, *args))
+    joinpath = pathjoin = __div__ = __floordiv__ = __truediv__ = lambda self, *args: pth(ospath.join(self, *args))
     normcase = property(lambda self: pth(ospath.normcase(self)))
     normpath = property(lambda self: pth(ospath.normpath(self)))
     norm = property(lambda self: pth(ospath.normcase(ospath.normpath(self))))
@@ -155,11 +239,16 @@ class Path(AbstractPath):
     same = samefile = lambda self, other: ospath.samefile(self, other)
     if hasattr(os, 'link'):
         if PY33:
-            link = lambda self, dest, follow_symlinks=True: os.link(self, dest, follow_symlinks=follow_symlinks)
+            link = lambda self, dest, follow_symlinks=True, **kwargs: os.link(self, dest, follow_symlinks=follow_symlinks, **kwargs)
         else:
             link = lambda self, dest: os.link(self, dest)
-    stat = property(lambda self, follow_symlinks=True: os.stat(self) if follow_symlinks else os.lstat(self))
-    lstat = property(lambda self: os.lstat(self))
+    if PY33:
+        stat = property(lambda self: LazyObjectProxy(lambda **kwargs: os.stat(self, **kwargs)))
+        lstat = property(lambda self: LazyObjectProxy(lambda **kwargs: os.lstat(self, **kwargs)))
+    else:
+        stat = property(lambda self: os.stat(self))
+        lstat = property(lambda self: os.lstat(self))
+    isreadable = property(lambda self: LazyObjectProxy(lambda **kwargs: os.access(self, os.R_OK, **kwargs)))
     mkdir = lambda self: os.mkdir(self)
     makedirs = lambda self: os.makedirs(self)
     if hasattr(os, 'pathconf'):
@@ -170,9 +259,9 @@ class Path(AbstractPath):
         fsencode = fsencoded = property(lambda self: os.fsencode(self))
     access = lambda self, mode, **kwargs: os.access(self, mode, **kwargs)
     if PY33:
-        isreadable = property(lambda self: LazyResult(lambda **kwargs: os.access(self, os.R_OK, **kwargs)))
-        iswritable = property(lambda self: LazyResult(lambda **kwargs: os.access(self, os.W_OK, **kwargs)))
-        isexecutable = property(lambda self: LazyResult(lambda **kwargs: os.access(self, os.R_OK | os.X_OK, **kwargs)))
+        isreadable = property(lambda self: LazyObjectProxy(lambda **kwargs: os.access(self, os.R_OK, **kwargs)))
+        iswritable = property(lambda self: LazyObjectProxy(lambda **kwargs: os.access(self, os.W_OK, **kwargs)))
+        isexecutable = property(lambda self: LazyObjectProxy(lambda **kwargs: os.access(self, os.R_OK | os.X_OK, **kwargs)))
     else:
         isreadable = property(lambda self: os.access(self, os.R_OK))
         iswritable = property(lambda self: os.access(self, os.W_OK))
@@ -195,23 +284,23 @@ class Path(AbstractPath):
         return pth(first), second
     extsplit = splitext
 
-    def chmod(self, mode, follow_symlinks=True):
+    def chmod(self, mode, follow_symlinks=True, **kwargs):
         if follow_symlinks:
-            return os.chmod(self, mode)
+            return os.chmod(self, mode, **kwargs)
         else:
             if PY33:
-                os.chmod(self, mode, follow_symlinks=follow_symlinks)
+                os.chmod(self, mode, follow_symlinks=follow_symlinks, **kwargs)
             else:
-                os.lchmod(self, mode)
+                os.lchmod(self, mode, **kwargs)
 
-    def chown(self, uid, gid, follow_symlinks=True):
+    def chown(self, uid, gid, follow_symlinks=True, **kwargs):
         if follow_symlinks:
-            os.chown(self, uid, gid)
+            os.chown(self, uid, gid, **kwargs)
         else:
             if PY33:
-                os.chown(self, uid, gid, follow_symlinks=follow_symlinks)
+                os.chown(self, uid, gid, follow_symlinks=follow_symlinks, **kwargs)
             else:
-                os.lchown(self, uid, gid)
+                os.lchown(self, uid, gid, **kwargs)
 
     lchmod = lambda self, mode: self.chmod(mode, follow_symlinks=False)
     lchown = lambda self, uid, gid: self.chown(uid, gid, follow_symlinks=False)
@@ -298,7 +387,7 @@ zippath_attribute = lambda func: property(lambda self: ZipPath(
 ))
 
 
-class ZipPath(Path):
+class ZipPath(AbstractPath):
     abs = abspath = zippath_attribute(ospath.abspath)
 
     @property
@@ -397,7 +486,7 @@ class ZipPath(Path):
                 return i
         return ZipPath(self.__zippath, self.__zipobj, ospath.join(self.__relpath, *paths))
 
-    __div__ = __floordiv__ = __truediv__ = joinpath
+    __div__ = __floordiv__ = __truediv__ = pathjoin = joinpath
     lexists = unavailable
     normcase = zippath_attribute(ospath.normcase)
     normpath = zippath_attribute(ospath.normpath)
