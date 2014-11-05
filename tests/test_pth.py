@@ -745,11 +745,11 @@ def test_norm():
 
 def test_normcase():
     p = pth('.', 'tEsts', '..', 'tests')
-    assert p.norm == os.path.normcase(p)
+    assert p.normcase == os.path.normcase(p)
 
 
 def test_normpath():
     p = pth('.', 'tEsts', '..', 'tests')
-    assert p.norm == os.path.normpath(p)
+    assert p.normpath == os.path.normpath(p)
 
 

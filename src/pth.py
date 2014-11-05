@@ -235,7 +235,7 @@ class Path(AbstractPath):
     normpath = property(lambda self: pth(ospath.normpath(self)))
     norm = property(lambda self: pth(ospath.normcase(ospath.normpath(self))))
     real = realpath = property(lambda self: pth(ospath.realpath(self)))
-    rel = relpath = lambda self, start: pth(ospath.relpath(self, start))
+    rel = relpath = lambda self, start: pth(ospath.relpath(start, self))
     same = samefile = lambda self, other: ospath.samefile(self, other)
     if hasattr(os, 'link'):
         if PY33:
