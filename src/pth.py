@@ -72,27 +72,42 @@ class PTH(object):
 
 pth = PTH()
 
-
-@property
-def unavailable(_):
-    raise NotImplementedError("Not available here.")
-
 string = str  # flake8: noqa
 
 
 class AbstractPath(string):
-    name = basename = property(lambda self: pth(ospath.basename(self)))
-    dir = dirname = property(lambda self: pth(ospath.dirname(self)))
-    isabs = property(lambda self: ospath.isabs(self))
+
+    @property
+    def basename(self):
+        return pth(ospath.basename(self))
+    name = basename
+
+    @property
+    def dirname(self):
+        return pth(ospath.dirname(self))
+    dir = dirname
+
+    @property
+    def isabs(self):
+        return ospath.isabs(self)
 
     @property
     def splitpath(self):
         first, second = ospath.split(self)
         return pth(first), pth(second)
     pathsplit = splitpath
-    drive = property(lambda self: ospath.splitdrive(self)[0])
-    ext = property(lambda self: ospath.splitext(self)[1])
-    stem = property(lambda self: ospath.splitext(ospath.basename(self))[0])
+
+    @property
+    def drive(self):
+        return ospath.splitdrive(self)[0]
+
+    @property
+    def ext(self):
+        return ospath.splitext(self)[1]
+
+    @property
+    def stem(self):
+        return ospath.splitext(ospath.basename(self))[0]
 
     def __repr__(self):
         return 'pth.Path(%r)' % string(self)
@@ -217,60 +232,216 @@ class LazyObjectProxy(object):
 
 
 class Path(AbstractPath):
-    abs = abspath = property(lambda self: pth(ospath.abspath(self)))
-    exists = property(lambda self: ospath.exists(self))
-    lexists = property(lambda self: ospath.lexists(self))
-    expanduser = property(lambda self: pth(ospath.expanduser(self)))
-    expandvars = property(lambda self: pth(ospath.expandvars(self)))
-    atime = property(lambda self: ospath.getatime(self))
-    ctime = property(lambda self: ospath.getctime(self))
-    mtime = property(lambda self: ospath.getmtime(self))
-    size = property(lambda self: ospath.getsize(self))
-    isdir = property(lambda self: ospath.isdir(self))
-    isfile = property(lambda self: ospath.isfile(self))
-    islink = property(lambda self: ospath.islink(self))
-    ismount = property(lambda self: ospath.ismount(self))
-    joinpath = pathjoin = __div__ = __floordiv__ = __truediv__ = lambda self, *args: pth(ospath.join(self, *args))
-    normcase = property(lambda self: pth(ospath.normcase(self)))
-    normpath = property(lambda self: pth(ospath.normpath(self)))
-    norm = property(lambda self: pth(ospath.normcase(ospath.normpath(self))))
-    real = realpath = property(lambda self: pth(ospath.realpath(self)))
-    rel = relpath = lambda self, start: pth(ospath.relpath(start, self))
-    same = samefile = lambda self, other: ospath.samefile(self, other)
+    # TODO: add xattr (py3.3). Should be a dict-like object
+
+    @property
+    def abspath(self):
+        return pth(ospath.abspath(self))
+    abs = abspath
+
+    @property
+    def exists(self):
+        return ospath.exists(self)
+
+    @property
+    def lexists(self):
+        return ospath.lexists(self)
+
+    @property
+    def expanduser(self):
+        return pth(ospath.expanduser(self))
+
+    @property
+    def expandvars(self):
+        return pth(ospath.expandvars(self))
+
+    @property
+    def atime(self):
+        return ospath.getatime(self)
+
+    @property
+    def ctime(self):
+        return ospath.getctime(self)
+
+    @property
+    def mtime(self):
+        return ospath.getmtime(self)
+
+    @property
+    def size(self):
+        return ospath.getsize(self)
+
+    @property
+    def isdir(self):
+        return ospath.isdir(self)
+
+    @property
+    def isfile(self):
+        return ospath.isfile(self)
+
+    @property
+    def islink(self):
+        return ospath.islink(self)
+
+    @property
+    def ismount(self):
+        return ospath.ismount(self)
+
+    def joinpath(self, *args):
+        return pth(ospath.join(self, *args))
+    pathjoin = __div__ = __floordiv__ = __truediv__ = joinpath
+
+    @property
+    def normcase(self):
+        return pth(ospath.normcase(self))
+
+    @property
+    def normpath(self):
+        return pth(ospath.normpath(self))
+
+    @property
+    def norm(self):
+        return pth(ospath.normcase(ospath.normpath(self)))
+
+    @property
+    def realpath(self):
+        return pth(ospath.realpath(self))
+    real = realpath
+
+    def relpath(self, start):
+        return pth(ospath.relpath(start, self))
+    rel = relpath
+
+    def samefile(self, other):
+        return ospath.samefile(self, other)
+    same = samefile
+
     if hasattr(os, 'link'):
         if PY33:
-            link = lambda self, dest, follow_symlinks=True, **kwargs: os.link(self, dest, follow_symlinks=follow_symlinks, **kwargs)
+            def link(self, dest, follow_symlinks=True, **kwargs):
+                os.link(self, dest, follow_symlinks=follow_symlinks, **kwargs)
         else:
-            link = lambda self, dest: os.link(self, dest)
+            def link(self, dest):
+                os.link(self, dest)
+
     if PY33:
-        stat = property(lambda self: LazyObjectProxy(lambda **kwargs: os.stat(self, **kwargs)))
-        lstat = property(lambda self: LazyObjectProxy(lambda **kwargs: os.lstat(self, **kwargs)))
+        @property
+        def stat(self):
+            return LazyObjectProxy(lambda **kwargs: os.stat(self, **kwargs))
+
+        @property
+        def lstat(self):
+            return LazyObjectProxy(lambda **kwargs: os.lstat(self, **kwargs))
     else:
-        stat = property(lambda self: os.stat(self))
-        lstat = property(lambda self: os.lstat(self))
-    isreadable = property(lambda self: LazyObjectProxy(lambda **kwargs: os.access(self, os.R_OK, **kwargs)))
-    mkdir = lambda self: os.mkdir(self)
-    makedirs = lambda self: os.makedirs(self)
+        @property
+        def stat(self):
+            return os.stat(self)
+
+        @property
+        def lstat(self):
+            return os.lstat(self)
+
+    @property
+    def isreadable(self):
+        return LazyObjectProxy(lambda **kwargs: os.access(self, os.R_OK, **kwargs))
+
+    def mkdir(self):
+        os.mkdir(self)
+
+    def makedirs(self):
+        os.makedirs(self)
+
     if hasattr(os, 'pathconf'):
-        pathconf = lambda self, name: os.pathconf(self, name)
+        def pathconf(self, name):
+            return os.pathconf(self, name)
+
     if hasattr(os, 'readlink'):
-        readlink = property(lambda self: os.readlink(self))
+        @property
+        def readlink(self):
+            return os.readlink(self)
+
     if hasattr(os, 'fsencode'):
-        fsencode = fsencoded = property(lambda self: os.fsencode(self))
-    access = lambda self, mode, **kwargs: os.access(self, mode, **kwargs)
+        @property
+        def fsencoded(self):
+            return os.fsencode(self)
+        fsencode = fsencoded
+
+    def access(self, mode, **kwargs):
+        return os.access(self, mode, **kwargs)
+
     if PY33:
-        isreadable = property(lambda self: LazyObjectProxy(lambda **kwargs: os.access(self, os.R_OK, **kwargs)))
-        iswritable = property(lambda self: LazyObjectProxy(lambda **kwargs: os.access(self, os.W_OK, **kwargs)))
-        isexecutable = property(lambda self: LazyObjectProxy(lambda **kwargs: os.access(self, os.R_OK | os.X_OK, **kwargs)))
+        @property
+        def isreadable(self):
+            return LazyObjectProxy(lambda **kwargs: os.access(self, os.R_OK, **kwargs))
+
+        @property
+        def iswritable(self):
+            return LazyObjectProxy(lambda **kwargs: os.access(self, os.W_OK, **kwargs))
+
+        @property
+        def isexecutable(self):
+            return LazyObjectProxy(lambda **kwargs: os.access(self, os.R_OK | os.X_OK, **kwargs))
     else:
-        isreadable = property(lambda self: os.access(self, os.R_OK))
-        iswritable = property(lambda self: os.access(self, os.W_OK))
-        isexecutable = property(lambda self: os.access(self, os.R_OK | os.X_OK))
+        @property
+        def isreadable(self):
+            return os.access(self, os.R_OK)
+
+        @property
+        def iswritable(self):
+            return os.access(self, os.W_OK)
+
+        @property
+        def isexecutable(self):
+            return os.access(self, os.R_OK | os.X_OK)
+
     if hasattr(os, 'chroot'):
-        chroot = lambda self: os.chroot(self)
+        def chroot(self):
+            os.chroot(self)
+
     if hasattr(os, 'chflags'):
-        chflags = lambda self, flags, follow_symlinks=True: os.chflags(self, flags) if follow_symlinks else os.lchflags(self, flags)
-        lchflags = lambda self, flags: os.lchflags(self, flags)
+        def chflags(self, flags, follow_symlinks=True):
+            if follow_symlinks:
+                os.chflags(self, flags)
+            else:
+                os.lchflags(self, flags)
+
+        def lchflags(self, flags):
+            os.lchflags(self, flags)
+
+    def unlink(self, **kwargs):
+        os.remove(self, **kwargs)
+    remove = unlink
+
+    def removedirs(self):
+        os.removedirs(self)
+
+    def rename(self, new, **kwargs):
+        os.rename(self, new, **kwargs)
+        return Path(new)
+
+    def renames(self, new):
+        os.renames(self, new)
+        return Path(new)
+
+    def replace(self, new, **kwargs):
+        os.replace(self, new, **kwargs)
+        return Path(new)
+
+    def rmdir(self, **kwargs):
+        os.rmdir(self, **kwargs)
+
+    @property
+    def statvfs(self):
+        return os.statvfs(self)
+
+    def symlink(self, link_name, target_is_directory=False, **kwargs):
+        os.symlink(self, link_name, target_is_directory=target_is_directory, **kwargs)
+
+    def truncate(self, length):
+        os.truncate(self, length)
+
+    def utime(self, times=None, **kwargs):
+        os.utime(self, times=times, **kwargs)
 
     @property
     def splitdrive(self):
@@ -302,8 +473,11 @@ class Path(AbstractPath):
             else:
                 os.lchown(self, uid, gid, **kwargs)
 
-    lchmod = lambda self, mode: self.chmod(mode, follow_symlinks=False)
-    lchown = lambda self, uid, gid: self.chown(uid, gid, follow_symlinks=False)
+    def lchmod(self, mode):
+        self.chmod(mode, follow_symlinks=False)
+
+    def lchown(self, uid, gid):
+        self.chown(uid, gid, follow_symlinks=False)
 
     @property
     def tree(self):
@@ -380,15 +554,16 @@ class WorkingDir(Path):
         return 'pth.WorkingDir(%r)' % string(self)
 
 
-zippath_attribute = lambda func: property(lambda self: ZipPath(
-    func(self._ZipPath__zippath),
-    self._ZipPath__zipobj,
-    self._ZipPath__relpath,
-))
-
-
 class ZipPath(AbstractPath):
-    abs = abspath = zippath_attribute(ospath.abspath)
+
+    @property
+    def abspath(self):
+        return ZipPath(
+            ospath.abspath(self._ZipPath__zippath),
+            self._ZipPath__zipobj,
+            self._ZipPath__relpath,
+        )
+    abs = abspath
 
     @property
     def exists(self):
@@ -406,12 +581,21 @@ class ZipPath(AbstractPath):
                 return False
         return True
 
-    expanduser = zippath_attribute(ospath.expanduser)
-    expandvars = property(lambda self: ZipPath(
-        ospath.expandvars(self.__zippath),
-        self.__zipobj,
-        ospath.expandvars(self.__relpath),
-    ))
+    @property
+    def expanduser(self):
+        return ZipPath(
+            ospath.expanduser(self._ZipPath__zippath),
+            self._ZipPath__zipobj,
+            self._ZipPath__relpath,
+        )
+
+    @property
+    def expandvars(self):
+        return ZipPath(
+            ospath.expandvars(self.__zippath),
+            self.__zipobj,
+            ospath.expandvars(self.__relpath),
+        )
 
     @property
     def atime(self):
@@ -477,21 +661,53 @@ class ZipPath(AbstractPath):
         else:
             return True
 
-    islink = property(lambda self: ospath.islink(self))
-    ismount = property(lambda self: ospath.ismount(self))
+    @property
+    def islink(self):
+        return ospath.islink(self)
+
+    @property
+    def ismount(self):
+        return ospath.ismount(self)
 
     def joinpath(self, *paths):
         for i in reversed(paths):
             if isinstance(i, Path) and i.isabs:
                 return i
         return ZipPath(self.__zippath, self.__zipobj, ospath.join(self.__relpath, *paths))
-
     __div__ = __floordiv__ = __truediv__ = pathjoin = joinpath
-    lexists = unavailable
-    normcase = zippath_attribute(ospath.normcase)
-    normpath = zippath_attribute(ospath.normpath)
-    norm = zippath_attribute(lambda self: ospath.normcase(ospath.normpath(self)))
-    real = realpath = zippath_attribute(ospath.realpath)
+
+    @property
+    def normcase(self):
+        return ZipPath(
+            ospath.normcase(self._ZipPath__zippath),
+            self._ZipPath__zipobj,
+            self._ZipPath__relpath,
+        )
+
+    @property
+    def normpath(self):
+        return ZipPath(
+            ospath.normpath(self._ZipPath__zippath),
+            self._ZipPath__zipobj,
+            self._ZipPath__relpath,
+        )
+
+    @property
+    def norm(self):
+        return ZipPath(
+            ospath.normcase(ospath.normpath(self._ZipPath__zippath)),
+            self._ZipPath__zipobj,
+            self._ZipPath__relpath,
+        )
+
+    @property
+    def realpath(self):
+        return ZipPath(
+            ospath.realpath(self._ZipPath__zippath),
+            self._ZipPath__zipobj,
+            self._ZipPath__relpath,
+        )
+    real = realpath
 
     def relpath(self, other):
         if isinstance(other, ZipPath) and other.__zippath == self.__zippath:
