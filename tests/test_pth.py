@@ -720,3 +720,36 @@ def test_proxy():
     obj.cwd
     obj.cwd
     assert len(calls) == 1
+
+
+def test_samefile():
+    assert pth('.').same(pth().abs)
+    assert pth('.').samefile(pth().abs)
+
+
+def test_realpath():
+    p = pth('tests')
+    assert p.real == p.realpath == os.path.realpath(p)
+
+
+def test_relpath():
+    p = pth('tests')
+    q = p / 'a' / 'b'
+    assert p.rel(q) == p.relpath(q) == pth('a', 'b')
+
+
+def test_norm():
+    p = pth('.', 'tEsts', '..', 'tests')
+    assert p.norm == os.path.normcase(os.path.normpath(p))
+
+
+def test_normcase():
+    p = pth('.', 'tEsts', '..', 'tests')
+    assert p.norm == os.path.normcase(p)
+
+
+def test_normpath():
+    p = pth('.', 'tEsts', '..', 'tests')
+    assert p.norm == os.path.normpath(p)
+
+
