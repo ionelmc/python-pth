@@ -77,6 +77,9 @@ string = str  # flake8: noqa
 
 class AbstractPath(string):
 
+    def __repr__(self):
+        return 'pth.Path(%r)' % string(self)
+
     @property
     def basename(self):
         return pth(ospath.basename(self))
@@ -109,9 +112,6 @@ class AbstractPath(string):
     def stem(self):
         return ospath.splitext(ospath.basename(self))[0]
 
-    def __repr__(self):
-        return 'pth.Path(%r)' % string(self)
-
     @property
     def files(self):
         for path in self.list:
@@ -127,6 +127,17 @@ class AbstractPath(string):
     @property
     def parts(self):
         return [pth(part or ospath.sep) for part in self.split(ospath.sep)]
+
+    @property
+    def parents(self):
+        parts = self.parts
+        return [pth(*parts[:-i]) for i in range(1, len(parts))]
+
+    def __eq__(self, other):
+        if isinstance(other, string):
+            return string(self) == string(other)
+        else:
+            raise NotImplementedError
 
 
 class cached_property(object):
@@ -309,7 +320,7 @@ class Path(AbstractPath):
     real = realpath
 
     def relpath(self, start):
-        return pth(ospath.relpath(start, self))
+        return pth(ospath.relpath(self, start))
     rel = relpath
 
     def samefile(self, other):

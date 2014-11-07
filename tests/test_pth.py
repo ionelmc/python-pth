@@ -318,6 +318,39 @@ def test_splitext_zip():
     assert isinstance(z.extsplit[0], pth.ZipPath)
 
 
+def test_parts():
+    assert pth('a', 'b', 'c').parts == ['a', 'b', 'c']
+
+
+def test_parts_zip():
+    z = pth('tests', 'files', 'test.zip').joinpath('b', 'c', 'd')
+    assert z.parts == ['tests', 'files', 'test.zip', 'b', 'c', 'd']
+
+
+def test_parents():
+    assert pth('a', 'b', 'c').parents == [pth('a', 'b'), 'a']
+
+
+def test_parents_zip():
+    z = pth('tests', 'files', 'test.zip').joinpath('b', 'c', 'd')
+    assert z.parents == [
+        pth('tests', 'files', 'test.zip', 'b', 'c'),
+        pth('tests', 'files', 'test.zip', 'b'),
+        pth('tests', 'files', 'test.zip'),
+        pth('tests', 'files'),
+        'tests',
+    ]
+
+
+def test_ext():
+    assert pth('a.b.c').ext == '.c'
+
+
+def test_ext_zip():
+    z = pth('tests', 'files', 'test.zip').joinpath('b.c.d')
+    assert z.ext == '.d'
+
+
 def test_splitext_zip_on_root():
     z = pth('tests', 'files', 'test.zip')
     assert z.splitext == (os.path.join('tests', 'files', 'test'), '.zip')
@@ -735,7 +768,15 @@ def test_realpath():
 def test_relpath():
     p = pth('tests')
     q = p / 'a' / 'b'
-    assert p.rel(q) == p.relpath(q) == pth('a', 'b')
+    assert q.rel(p) == q.relpath(p) == pth('a', 'b')
+
+
+def test_relpath_zip():
+    r = pth('tests/files')
+    p = pth('tests/files/test.zip')
+    q = p / 'a'
+    assert q.rel(p) == q.relpath(p) == 'a'
+    assert p.rel(r) == p.rel(r) == 'test.zip'
 
 
 def test_norm():
@@ -753,3 +794,5 @@ def test_normpath():
     assert p.normpath == os.path.normpath(p)
 
 
+def test_join_zippath_abs():
+    assert pth('tests/files/test.zip') / '/etc' == '/etc'
