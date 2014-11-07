@@ -591,7 +591,7 @@ def test_lstat():
         assert pth('foo').lstat
 
 
-@pytest.mark.skipif(not PY33, reason="Python < 3.3")
+@pytest.mark.skipif(not PY33, reason="python too old (need >= 3.3)")
 def test_stat_kwargs():
     with Story(['os.stat']) as story:
         os.stat(pth.Path('foo'), dir_fd=123) == "stuff"
@@ -600,7 +600,7 @@ def test_stat_kwargs():
         assert pth('foo').stat(dir_fd=123)
 
 
-@pytest.mark.skipif(not PY33, reason="Python < 3.3")
+@pytest.mark.skipif(not PY33, reason="python too old (need >= 3.3)")
 def test_lstat_kwargs():
     with Story(['os.lstat']) as story:
         os.lstat(pth.Path('foo'), dir_fd=123) == "stuff"
@@ -680,7 +680,7 @@ def test_isreadable():
         assert pth('foo').isreadable
 
 
-@pytest.mark.skipif(not PY33, reason="Python < 3.3")
+@pytest.mark.skipif(not PY33, reason="python too old (need >= 3.3)")
 def test_isreadable_kwargs():
     with Story(['os.access']) as story:
         os.access(pth.Path('foo'), os.R_OK, follow_symlinks=True) == True
@@ -697,7 +697,7 @@ def test_iswritable():
         assert pth('foo').iswritable
 
 
-@pytest.mark.skipif(not PY33, reason="Python < 3.3")
+@pytest.mark.skipif(not PY33, reason="python too old (need >= 3.3)")
 def test_iswritable_kwargs():
     with Story(['os.access']) as story:
         os.access(pth.Path('foo'), os.W_OK, follow_symlinks=True) == True
@@ -714,7 +714,7 @@ def test_isexecutable():
         assert pth('foo').isexecutable
 
 
-@pytest.mark.skipif(not PY33, reason="Python < 3.3")
+@pytest.mark.skipif(not PY33, reason="python too old (need >= 3.3)")
 def test_isexecutable_kwargs():
     with Story(['os.access']) as story:
         os.access(pth.Path('foo'), os.R_OK | os.X_OK, follow_symlinks=True) == True
@@ -723,7 +723,7 @@ def test_isexecutable_kwargs():
         assert pth('foo').isexecutable(follow_symlinks=True)
 
 
-@pytest.mark.skipif(not PY33, reason="Python < 3.3")
+@pytest.mark.skipif(not PY33, reason="python too old (need >= 3.3)")
 def test_chflags_kwargs():
     with Story(['os.lchflags']) as story:
         os.lchflags(pth.Path('foo'), stat.UF_NODUMP) == None
