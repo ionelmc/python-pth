@@ -16,7 +16,7 @@ from pytest import raises
 import pth
 
 
-DECENT_PY3 = sys.version_info[:2] >= (3, 3)
+PY33 = sys.version_info[:2] >= (3, 3)
 PY2 = sys.version_info[0] == 2
 
 
@@ -456,7 +456,7 @@ def test_chown():
 
 def test_chmod_nofollow():
     with Story(['os.lchmod', 'os.chmod']) as story:
-        if DECENT_PY3:
+        if PY33:
             os.chmod(pth.Path('foobar'), 0o666, follow_symlinks=False) == None
         else:
             os.lchmod(pth.Path('foobar'), 0o666) == None
@@ -467,7 +467,7 @@ def test_chmod_nofollow():
 
 def test_chown_nofollow():
     with Story(['os.lchown', 'os.chown']) as story:
-        if DECENT_PY3:
+        if PY33:
             os.chown(pth.Path('foobar'), 123, 123, follow_symlinks=False) == None
         else:
             os.lchown(pth.Path('foobar'), 123, 123) == None
@@ -478,7 +478,7 @@ def test_chown_nofollow():
 
 def test_lchmod():
     with Story(['os.lchmod', 'os.chmod']) as story:
-        if DECENT_PY3:
+        if PY33:
             os.chmod(pth.Path('foobar'), 0o666, follow_symlinks=False) == None
         else:
             os.lchmod(pth.Path('foobar'), 0o666) == None
@@ -489,7 +489,7 @@ def test_lchmod():
 
 def test_lchown():
     with Story(['os.lchown', 'os.chown']) as story:
-        if DECENT_PY3:
+        if PY33:
             os.chown(pth.Path('foobar'), 123, 123, follow_symlinks=False) == None
         else:
             os.lchown(pth.Path('foobar'), 123, 123) == None
@@ -557,13 +557,16 @@ def test_cwd():
 
 def test_link():
     with Story(['os.link']) as story:
-        os.link(pth.Path('foo'), 'bar', follow_symlinks=True) == None
+        if PY33:
+            os.link(pth.Path('foo'), 'bar', follow_symlinks=True) == None
+        else:
+            os.link(pth.Path('foo'), 'bar') == None
 
     with story.replay(strict=True):
         pth('foo').link('bar')
 
 
-@pytest.mark.skipif(not DECENT_PY3, reason="no support for follow_symlinks")
+@pytest.mark.skipif(not PY33, reason="no support for follow_symlinks")
 def test_link_3_3():
     with Story(['os.link']) as story:
         os.link(pth.Path('foo'), 'bar', follow_symlinks=False) == None
@@ -588,6 +591,7 @@ def test_lstat():
         assert pth('foo').lstat
 
 
+@pytest.mark.skipif(not PY33, reason="Python < 3.3")
 def test_stat_kwargs():
     with Story(['os.stat']) as story:
         os.stat(pth.Path('foo'), dir_fd=123) == "stuff"
@@ -596,6 +600,7 @@ def test_stat_kwargs():
         assert pth('foo').stat(dir_fd=123)
 
 
+@pytest.mark.skipif(not PY33, reason="Python < 3.3")
 def test_lstat_kwargs():
     with Story(['os.lstat']) as story:
         os.lstat(pth.Path('foo'), dir_fd=123) == "stuff"
@@ -628,6 +633,7 @@ def test_pathconf():
         assert pth('foo').pathconf('bar') == 'whatev'
 
 
+@pytest.mark.skipif(not hasattr(os, 'fsencode'), reason="no support for fsencode")
 def test_fsencode():
     assert pth('foo').fsencode == pth('foo').fsencoded == b'foo'
 
@@ -674,6 +680,7 @@ def test_isreadable():
         assert pth('foo').isreadable
 
 
+@pytest.mark.skipif(not PY33, reason="Python < 3.3")
 def test_isreadable_kwargs():
     with Story(['os.access']) as story:
         os.access(pth.Path('foo'), os.R_OK, follow_symlinks=True) == True
@@ -690,6 +697,7 @@ def test_iswritable():
         assert pth('foo').iswritable
 
 
+@pytest.mark.skipif(not PY33, reason="Python < 3.3")
 def test_iswritable_kwargs():
     with Story(['os.access']) as story:
         os.access(pth.Path('foo'), os.W_OK, follow_symlinks=True) == True
@@ -706,6 +714,7 @@ def test_isexecutable():
         assert pth('foo').isexecutable
 
 
+@pytest.mark.skipif(not PY33, reason="Python < 3.3")
 def test_isexecutable_kwargs():
     with Story(['os.access']) as story:
         os.access(pth.Path('foo'), os.R_OK | os.X_OK, follow_symlinks=True) == True
@@ -714,12 +723,14 @@ def test_isexecutable_kwargs():
         assert pth('foo').isexecutable(follow_symlinks=True)
 
 
+@pytest.mark.skipif(not PY33, reason="Python < 3.3")
 def test_chflags_kwargs():
     with Story(['os.lchflags']) as story:
         os.lchflags(pth.Path('foo'), stat.UF_NODUMP) == None
 
     with story.replay(strict=True):
         pth('foo').chflags(stat.UF_NODUMP, follow_symlinks=True)
+
 
 def test_chflags():
     with Story(['os.chflags']) as story:
